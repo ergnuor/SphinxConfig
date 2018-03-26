@@ -1,0 +1,27 @@
+{
+    "name": "ergnuor/sphinx-config",
+    "type": "library",
+    "description": "A PHP Sphinx config helper",
+    "keywords": ["sphinx", "config", "helper"],
+    "license": "Apache-2.0",
+    "authors": [{"name": "Denis Tarasov", "email": "brokeneye@gmail.com"}],
+    "support": {
+        "email": "brokeneye@gmail.com"
+    },
+    "require": {
+        "php": ">=5.6.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "6.3.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ergnuor\\SphinxConfig\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Ergnuor\\SphinxConfig\\Tests\\": "tests/SphinxConfig"
+        }
+    }
+}
