@@ -1,4 +1,6 @@
 # SphinxConfig
+[![Build Status](https://travis-ci.org/ergnuor/SphinxConfig.png)](https://travis-ci.org/ergnuor/SphinxConfig)
+## About
 This is the Sphinx configuration helper, which extends block inheritance and allows you to integrate configuration into your application through the possibility of using placeholders.
 ## Usage
 ### Standalone
