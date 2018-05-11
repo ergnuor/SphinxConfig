@@ -1,0 +1,12 @@
+language: php
+
+sudo: false
+
+php:
+  - 5.6
+
+before_script:
+  - composer dump-autoload
+  - cd ./tests
+
+script: phpunit --configuration phpunit.xml

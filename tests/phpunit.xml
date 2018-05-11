@@ -1,0 +1,7 @@
+<phpunit convertNoticesToExceptions="true" bootstrap="../vendor/autoload.php">
+    <testsuites>
+        <testsuite name="SphinxConfig">
+            <directory>./SphinxConfig</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

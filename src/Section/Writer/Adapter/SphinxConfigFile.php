@@ -35,15 +35,12 @@ class SphinxConfigFile extends SphinxConfigAbstract
             throw new WriterException('Destination path required');
         }
 
-        $resultFileName = $this->dstPath . DIRECTORY_SEPARATOR . $configName . '.conf';
-
-        if (!is_writable($resultFileName)) {
-            throw new WriterException("Destination file '{$resultFileName}' is not writable");
+        if (!is_writable($this->dstPath)) {
+            throw new WriterException("Destination directory '{$this->dstPath}' is not writable");
         }
 
-
         file_put_contents(
-            $resultFileName,
+            $this->dstPath . DIRECTORY_SEPARATOR . $configName . '.conf',
             $this->buffer
         );
     }
