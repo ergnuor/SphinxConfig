@@ -2,10 +2,13 @@
 
 namespace Ergnuor\SphinxConfig\Section\Source;
 
-use Ergnuor\SphinxConfig\Section\SourceAbstract;
+use Ergnuor\SphinxConfig\Section\SourceInterface;
+use Ergnuor\SphinxConfig\Exception\SourceException;
 
-class File extends SourceAbstract
+abstract class FileAbstract implements SourceInterface
 {
+    protected $extension = null;
+
     /**
      * Contents previously read configs
      *
@@ -23,18 +26,23 @@ class File extends SourceAbstract
 
     /**
      * @param string $configsRootPath
+     * @throws SourceException
      */
     public function __construct($configsRootPath)
     {
-        $this->configsRootPath = (string)$configsRootPath;
+        $this->configsRootPath = trim((string)$configsRootPath);
+
+        if (empty($this->configsRootPath)) {
+            throw new SourceException("Source path required");
+        }
+
+        if (!file_exists($this->configsRootPath)) {
+            throw new SourceException("Source directory '{$this->configsRootPath}' does not exists");
+        }
     }
 
     /**
-     * Loads section config
-     *
-     * @param string $configName
-     * @param string $sectionName
-     * @return array
+     * {@inheritdoc}
      */
     public function load($configName, $sectionName)
     {
@@ -72,8 +80,8 @@ class File extends SourceAbstract
                 continue;
             }
 
-            $blockName = preg_replace('/\.php$/', '', $blockFileName);
-            $blockConfig = (array)include($blockFilesPath . $blockFileName);
+            $blockName = preg_replace('/\.' . preg_quote($this->extension) . '$/', '', $blockFileName);
+            $blockConfig = $this->readFile($blockFilesPath . $blockFileName);
             $blocks[$blockName] = $blockConfig;
         }
 
@@ -89,12 +97,12 @@ class File extends SourceAbstract
     protected function readMultiSectionFile($configName)
     {
         if (!isset(static::$singleFileConfigs[$configName])) {
-            $singleFileName = $this->configsRootPath . DIRECTORY_SEPARATOR . $configName . '.php';
+            $singleFileName = $this->configsRootPath . DIRECTORY_SEPARATOR . $configName . '.' . $this->extension;
 
             if (!file_exists($singleFileName)) {
                 static::$singleFileConfigs[$configName] = [];
             } else {
-                static::$singleFileConfigs[$configName] = (array)include($singleFileName);
+                static::$singleFileConfigs[$configName] = $this->readFile($singleFileName);
             }
         }
 
@@ -126,11 +134,23 @@ class File extends SourceAbstract
     protected function loadFromSingleSectionFile($configName, $sectionName)
     {
         $configRootPath = $this->configsRootPath . DIRECTORY_SEPARATOR . $configName;
-        $sectionFileName = $configRootPath . DIRECTORY_SEPARATOR . $sectionName . '.php';
+        $sectionFileName = $configRootPath . DIRECTORY_SEPARATOR . $sectionName . '.' . $this->extension;
         if (!file_exists($sectionFileName)) {
             return [];
         }
 
-        return (array)include($sectionFileName);
+        return $this->readFile($sectionFileName);
     }
+
+    public function beforeReadSections()
+    {
+        static::$singleFileConfigs = [];
+    }
+
+    public function afterReadSections()
+    {
+
+    }
+
+    abstract protected function readFile($filePath);
 }

@@ -15,7 +15,7 @@ class MultiBlock extends WriterAbstract
         $config = $section->getConfig();
 
         foreach ($config as $blockName => $blockConfig) {
-            $extends = $blockConfig['extends'] ?: null;
+            $extends = isset($blockConfig['extends']) ? $blockConfig['extends'] : null;
 
             $this->writerAdapter->startBlock($blockName, $extends, $section->getSectionName());
             foreach ($blockConfig['config'] as $paramName => $paramValue) {

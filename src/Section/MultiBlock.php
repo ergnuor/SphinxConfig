@@ -3,7 +3,6 @@
 namespace Ergnuor\SphinxConfig\Section;
 
 
-use \Ergnuor\SphinxConfig;
 use \Ergnuor\SphinxConfig\Exception\SectionException;
 
 /*
@@ -32,9 +31,11 @@ class MultiBlock
     protected $sectionName = null;
 
     /**
-     * @var null|\Ergnuor\SphinxConfig\SphinxConfigAbstract
+     * Global placeholder values
+     *
+     * @var array
      */
-    protected $sphinxConfig = null;
+    protected $globalPlaceholderValues = [];
 
     /**
      * List of sphinx multi-value parameters
@@ -109,18 +110,18 @@ class MultiBlock
      * @param string $configName
      * @param string $sectionName
      * @param SourceInterface $source
-     * @param \Ergnuor\SphinxConfig\SphinxConfigAbstract $sphinxConfig
+     * @param array $globalPlaceholderValues
      */
     public function __construct(
         $configName,
         $sectionName,
         SourceInterface $source,
-        SphinxConfig\SphinxConfigAbstract $sphinxConfig
+        array $globalPlaceholderValues
     ) {
         $this->configName = (string)$configName;
         $this->sectionName = (string)$sectionName;
         $this->source = $source;
-        $this->sphinxConfig = $sphinxConfig;
+        $this->globalPlaceholderValues = $globalPlaceholderValues;
 
         $this->configs[$configName] = [];
     }
@@ -135,11 +136,6 @@ class MultiBlock
     {
         $this->loadConfig($this->configName);
         $this->assemble();
-
-        /*var_dump($this->sectionName);
-        var_dump($this->configs);
-        var_dump('-----------');*/
-//        exit;
 
         return $this->getCleanConfig();
     }
@@ -210,22 +206,17 @@ class MultiBlock
     {
         $externalInheritanceBlocks = $this->getExternalInheritanceBlocks($this->configName);
 
-        /*var_dump('$externalInheritanceBlocks');
-        var_dump($externalInheritanceBlocks);*/
 
         foreach ($externalInheritanceBlocks as $blockName => $blockConfig) {
-            /*var_dump('$blockName');
-            var_dump($blockName);
-            var_dump($blockConfig);*/
-
             $currentBlockConfig = $blockConfig;
             $blocksInheritanceStack = [$blockConfig['fullBlockName']];
 
-            while ($currentBlockConfig['extends']) {
+            while (isset($currentBlockConfig['extends'])) {
                 $extendsConfig = $currentBlockConfig['extendsConfig'];
                 $extends = $currentBlockConfig['extends'];
 
-                $pulledBlockConfig = $this->configs[$extendsConfig][$extends] ?: null;
+                $pulledBlockConfig = isset($this->configs[$extendsConfig][$extends]) ?
+                    $this->configs[$extendsConfig][$extends] : null;
 
                 if (!isset($pulledBlockConfig)) {
                     $supposedFullBlockName = "{$extendsConfig}@{$extends}";
@@ -363,23 +354,11 @@ class MultiBlock
     protected function processInheritance()
     {
         foreach ($this->configs[$this->configName] as $blockName => $blockConfig) {
-            /*var_dump('$blockName');
-            var_dump($blockName);
-            var_dump('$blockConfig');
-            var_dump($blockConfig);*/
-
             $blockConfig = $this->processSphinxConfigInheritance($blockConfig);
 
             $blockConfig = $this->processPseudoBlockInheritance($blockConfig);
 
             $this->configs[$this->configName][$blockName] = $blockConfig;
-//            $parentBlockConfig = $blockConfig;
-
-            /*var_dump('PROCESSED BLOCK CONFIG');
-            var_dump($this->config[$this->configName][$blockName]);
-            var_dump('------------------------------------------------------------------');
-            var_dump('');
-            var_dump('');*/
         }
     }
 
@@ -394,23 +373,14 @@ class MultiBlock
     protected function processSphinxConfigInheritance($blockConfig)
     {
         foreach ($blockConfig['config'] as $paramName => $paramValue) {
-            $paramModifier = $blockConfig['paramModifier'][$paramName] ?: null;
-
-            /*var_dump('$paramName');
-            var_dump($paramName);
-            var_dump('$paramModifier');
-            var_dump($paramModifier);
-            var_dump('$paramValue');
-            var_dump($paramValue);*/
+            $paramModifier = isset($blockConfig['paramModifier'][$paramName]) ?
+                $blockConfig['paramModifier'][$paramName] : null;
 
             if (
                 $this->isMultiValueParam($paramName) &&
                 $paramModifier != 'clear'
             ) {
                 $parentParamValue = $this->getClosestParentParamValue($paramName, $blockConfig);
-
-                /*var_dump('$parentParamValue');
-                var_dump($parentParamValue);*/
 
                 if (!is_null($parentParamValue)) {
                     $blockConfig['config'][$paramName] = $this->processSphinxParamInheritance(
@@ -419,9 +389,6 @@ class MultiBlock
                     );
                 }
             }
-
-            /*var_dump('PROCESSED $paramValue');
-            var_dump($blockConfig['config'][$paramName]);*/
         }
         return $blockConfig;
     }
@@ -469,9 +436,6 @@ class MultiBlock
     {
         $parentBlockConfig = $this->getParentBlock($blockConfig);
 
-        /*var_dump('$parentBlockConfig');
-        var_dump($parentBlockConfig);*/
-
         if (
             !is_null($parentBlockConfig) &&
             $parentBlockConfig['isPseudo']
@@ -489,14 +453,6 @@ class MultiBlock
      */
     protected function applyPlaceholderValues()
     {
-        /*$this->placeholders = [
-            'path' => [
-                'to' => [
-                    'value' => 'PTValue',
-                ],
-            ],
-        ];*/
-
         foreach ($this->configs[$this->configName] as $blockName => $blockConfig) {
             $parentBlockConfig = $this->getParentBlock($blockConfig);
 
@@ -513,43 +469,14 @@ class MultiBlock
                 foreach ($paramValue as $paramKey => $currentValue) {
                     $placeholders = $this->parsePlaceholders($currentValue);
 
-                    /*var_dump('$placeholders');
-                    var_dump($placeholders);*/
-
                     foreach ($placeholders as $placeholder) {
-                        /*var_dump('$placeholder');
-                        var_dump($placeholder);*/
-
-
                         $placeholderValue = $this->findByPath(
                             array_replace_recursive(
-                                $this->sphinxConfig->getPlaceholderValues(),
+                                $this->globalPlaceholderValues,
                                 $blockConfig['placeholderValues']
                             ),
                             $this->clearPlaceholderBoundaries($placeholder)
                         );
-
-                        /*var_dump('$placeholderValue');
-                        var_dump($placeholderValue);
-                        var_dump('getPlaceholderValues');
-                        var_dump($this->sphinxConfig->getPlaceholderValues());
-                        var_dump('REPLACE');
-                        var_dump(array_replace_recursive(
-                            $this->sphinxConfig->getPlaceholderValues(),
-                            $blockConfig['placeholderValues']
-                        ));*/
-
-                        /*$placeholderValue = $this->findByPath(
-                            $blockConfig['placeholders'],
-                            $this->clearPlaceholderBoundaries($placeholder)
-                        );
-
-                        if (is_null($placeholderValue)) {
-                            $placeholderValue = $this->findByPath(
-                                $this->sphinxConfig->getPlaceholders(),
-                                $this->clearPlaceholderBoundaries($placeholder)
-                            );
-                        }*/
 
                         $currentValue = str_replace($placeholder, (string)$placeholderValue, $currentValue);
                     }
@@ -631,16 +558,7 @@ class MultiBlock
         );
 
         foreach ($realBlocks as $blockName => $blockConfig) {
-
-            /*var_dump('$blockName');
-            var_dump($blockName);
-            var_dump('$blockConfig');
-            var_dump($blockConfig);*/
-
             $closestParentRealBlockName = $this->getClosestParentRealBlockName($blockConfig);
-
-            /*var_dump('$closestParentRealBlockName');
-            var_dump($closestParentRealBlockName);*/
 
             if (!is_null($closestParentRealBlockName)) {
                 $blockConfig['extends'] = $closestParentRealBlockName;
@@ -790,8 +708,10 @@ class MultiBlock
 
             $blockConfig['name'] = $blockName;
             $blockConfig['fullBlockName'] = $configName . '@' . $blockName;
-            $blockConfig['isPseudo'] = (bool)($blockConfig['isPseudo'] ?: false);
-            $blockConfig['placeholderValues'] = (array)($blockConfig['placeholderValues'] ?: []);
+            $blockConfig['isPseudo'] = (bool)(array_key_exists('isPseudo', $blockConfig) ?
+                $blockConfig['isPseudo'] : false);
+            $blockConfig['placeholderValues'] = isset($blockConfig['placeholderValues']) ?
+                (array)$blockConfig['placeholderValues'] : [];
 
             $this->configs[$configName][$blockName] = $this->normalizeSphinxConfig($blockConfig);
         }
@@ -836,7 +756,7 @@ class MultiBlock
         $paramNameParts = explode(':', $paramName);
         return [
             $paramNameParts[0],
-            $paramNameParts[1] ?: null,
+            isset($paramNameParts[1]) ? $paramNameParts[1] : null,
         ];
     }
 
@@ -872,10 +792,6 @@ class MultiBlock
      */
     protected function getExternalInheritanceBlocks($configName)
     {
-        /*var_dump('getExternalInheritanceBlocks');
-        var_dump($this->config[$configName]);
-        var_dump('------');*/
-
         return array_filter(
             $this->configs[$configName],
             function ($blockConfig) {

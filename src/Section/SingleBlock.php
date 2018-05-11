@@ -18,22 +18,24 @@ class SingleBlock extends MultiBlock
     {
         parent::loadConfig($configName);
 
-
         /*
          * When inheriting, we want all the values of parent blocks to be copied to the main block
          * (The block which name is equal to the section name)
          * So we mark them as pseudo.
          */
-        if ($configName != $this->configName) {
-            $this->configs[$configName] = array_map(
-                function ($blockConfig) {
+        $this->configs[$configName] = array_map(
+            function ($blockConfig) use ($configName) {
+                if (
+                    $configName != $this->configName ||
+                    $blockConfig['name'] != $this->sectionName
+                ) {
                     $blockConfig['isPseudo'] = true;
+                }
 
-                    return $blockConfig;
-                },
-                $this->configs[$configName]
-            );
-        }
+                return $blockConfig;
+            },
+            $this->configs[$configName]
+        );
     }
 
     /**
@@ -66,7 +68,7 @@ class SingleBlock extends MultiBlock
     protected function getCleanConfig()
     {
         $cleanConfig = parent::getCleanConfig();
-        return $cleanConfig[$this->sectionName]['config'] ?: [];
+        return isset($cleanConfig[$this->sectionName]['config']) ? $cleanConfig[$this->sectionName]['config'] : [];
     }
 
     protected function getCleanBlock($blockConfig)

@@ -22,6 +22,29 @@ abstract class SphinxConfigAbstract
     protected $placeholderValues = [];
 
     /**
+     * @var null|Section\SourceInterface
+     */
+    protected $sourceObject = null;
+
+    /**
+     * @var null|Section\Writer\AdapterInterface
+     */
+    protected $writerObject = null;
+
+
+    /**
+     * @param Section\SourceInterface $sourceObject
+     * @param Section\Writer\AdapterInterface $writerObject
+     */
+    public function __construct(
+        Section\SourceInterface $sourceObject = null,
+        Section\Writer\AdapterInterface $writerObject = null
+    ) {
+        $this->sourceObject = $sourceObject;
+        $this->writerObject = $writerObject;
+    }
+
+    /**
      * @param string $configName
      * @return $this
      */
@@ -39,6 +62,7 @@ abstract class SphinxConfigAbstract
         $writerAdapter->beforeWriteConfig($configName);
 
         $sourceObject = $this->getSectionSourceObject();
+        $sourceObject->beforeReadSections();
 
         foreach ($sectionList as $sectionName => $sectionClassName) {
             $section = $this->getSectionObject($sectionClassName, $configName, $sectionName, $sourceObject);
@@ -47,6 +71,7 @@ abstract class SphinxConfigAbstract
         }
 
         $writerAdapter->afterWriteConfig($configName);
+        $sourceObject->afterReadSections();
 
         return $this;
     }
@@ -112,7 +137,12 @@ abstract class SphinxConfigAbstract
         $sectionName,
         SourceInterface $sourceObject
     ) {
-        return new $sectionClassName($configName, $sectionName, $sourceObject, $this);
+        return new $sectionClassName(
+            $configName,
+            $sectionName,
+            $sourceObject,
+            $this->getPlaceholderValues()
+        );
     }
 
     /**
@@ -120,12 +150,18 @@ abstract class SphinxConfigAbstract
      *
      * @return SourceInterface
      */
-    abstract protected function getSectionSourceObject();
+    protected function getSectionSourceObject()
+    {
+        return $this->sourceObject;
+    }
 
     /**
      * Specifies the object to generate the resulting configs
      *
      * @return Section\Writer\AdapterInterface
      */
-    abstract protected function getWriterAdapterObject();
+    protected function getWriterAdapterObject()
+    {
+        return $this->writerObject;
+    }
 }

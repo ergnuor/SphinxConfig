@@ -44,4 +44,7 @@ interface SourceInterface
      * @return array
      */
     function loadBlocks($configName, $sectionName);
+
+    function beforeReadSections();
+    function afterReadSections();
 }

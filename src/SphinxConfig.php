@@ -2,8 +2,8 @@
 
 namespace Ergnuor\SphinxConfig;
 
-use Ergnuor\SphinxConfig\Exception\ConfigurationException;
-use MongoDB\Driver\Exception\ConnectionException;
+use Ergnuor\SphinxConfig\Exception\WriterException;
+use Ergnuor\SphinxConfig\Exception\SourceException;
 
 class SphinxConfig extends SphinxConfigAbstract
 {
@@ -60,15 +60,10 @@ class SphinxConfig extends SphinxConfigAbstract
     /**
      * @param bool $checkPath
      * @return null|string
-     * @throws ConfigurationException
      */
-    public function getSrcPath($checkPath = false)
+    public function getSrcPath()
     {
         $curSrcPath = $this->srcPath ?: self::$defaultSrcPath;
-
-        if ($checkPath) {
-            $this->checkPath($curSrcPath, 'source');
-        }
 
         return $curSrcPath;
     }
@@ -86,18 +81,10 @@ class SphinxConfig extends SphinxConfigAbstract
     /**
      * @param bool $checkPath
      * @return null|string
-     * @throws ConfigurationException
      */
-    public function getDstPath($checkPath = false)
+    public function getDstPath()
     {
         $curDstPath = $this->dstPath ?: self::$defaultDstPath;
-        if (empty($curDstPath)) {
-            $curDstPath = $this->getSrcPath();
-        }
-
-        if ($checkPath) {
-            $this->checkPath($curDstPath, 'destination');
-        }
 
         return $curDstPath;
     }
@@ -113,44 +100,30 @@ class SphinxConfig extends SphinxConfigAbstract
     }
 
     /**
-     * @param string $path
-     * @param string $type
-     * @throws ConfigurationException
-     */
-    protected function checkPath($path, $type)
-    {
-        if (empty($path)) {
-            throw new ConnectionException("Config {$type} path required");
-        }
-
-        $type = ucfirst($type);
-
-        if (!file_exists($path)) {
-            throw new ConfigurationException("{$type} directory '{$path}' does not exists");
-        }
-    }
-
-    /**
      * Specifies the object to load the source config
      *
      * @return Section\SourceInterface
-     * @throws ConfigurationException
+     * @throws SourceException
      */
     protected function getSectionSourceObject()
     {
-        return new Section\Source\File($this->getSrcPath(true));
+        return new Section\Source\PhpArray($this->getSrcPath());
     }
 
     /**
      * Specifies the object to generate the resulting configs
      *
      * @return Section\Writer\AdapterInterface
-     * @throws ConfigurationException
+     * @throws WriterException
      */
     protected function getWriterAdapterObject()
     {
-        $writer = new Section\Writer\Adapter\File();
-        $writer->setPath($this->getDstPath(true));
-        return $writer;
+        $dstPath = $this->getDstPath();
+
+        if (empty($dstPath)) {
+            return new Section\Writer\Adapter\SphinxConfigStdout();
+        } else {
+            return new Section\Writer\Adapter\SphinxConfigFile($dstPath);
+        }
     }
 }
