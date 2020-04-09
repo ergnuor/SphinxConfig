@@ -22,7 +22,7 @@ abstract class FileAbstract implements SourceInterface
      *
      * @var null|string
      */
-    protected $configsRootPath = null;
+    private $configsRootPath = null;
 
     /**
      * @param string $configsRootPath
@@ -88,13 +88,23 @@ abstract class FileAbstract implements SourceInterface
         return $blocks;
     }
 
+	public function beforeReadSections()
+	{
+		static::$singleFileConfigs = [];
+	}
+
+	public function afterReadSections()
+	{
+
+	}
+
     /**
      * Reads and caches config from a multi-sections file
      *
      * @param string $configName
      * @return array
      */
-    protected function readMultiSectionFile($configName)
+    private function readMultiSectionFile($configName)
     {
         if (!isset(static::$singleFileConfigs[$configName])) {
             $singleFileName = $this->configsRootPath . DIRECTORY_SEPARATOR . $configName . '.' . $this->extension;
@@ -117,7 +127,7 @@ abstract class FileAbstract implements SourceInterface
      * @param string $sectionName
      * @return array
      */
-    protected function loadFromMultiSectionFile($configName, $sectionName)
+    private function loadFromMultiSectionFile($configName, $sectionName)
     {
         $config = $this->readMultiSectionFile($configName);
         return isset($config[$sectionName]) ? (array)$config[$sectionName] : [];
@@ -131,7 +141,7 @@ abstract class FileAbstract implements SourceInterface
      * @param string $sectionName
      * @return array
      */
-    protected function loadFromSingleSectionFile($configName, $sectionName)
+    private function loadFromSingleSectionFile($configName, $sectionName)
     {
         $configRootPath = $this->configsRootPath . DIRECTORY_SEPARATOR . $configName;
         $sectionFileName = $configRootPath . DIRECTORY_SEPARATOR . $sectionName . '.' . $this->extension;
@@ -140,16 +150,6 @@ abstract class FileAbstract implements SourceInterface
         }
 
         return $this->readFile($sectionFileName);
-    }
-
-    public function beforeReadSections()
-    {
-        static::$singleFileConfigs = [];
-    }
-
-    public function afterReadSections()
-    {
-
     }
 
     abstract protected function readFile($filePath);

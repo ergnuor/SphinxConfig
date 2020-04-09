@@ -147,8 +147,8 @@ return [
             'sql_query_pre' => [
                 'SET NAMES utf8',
                 // ... other pre queries
-                'sph_counter' => 'INSERT INTO sphCounter  (indexingStartedAt, caption) \
-                    VALUES(NOW(), \'main\') \
+                'sph_counter' => 'INSERT INTO sphCounter  (indexingStartedAt, caption)
+                    VALUES(NOW(), \'main\')
                     ON DUPLICATE KEY UPDATE indexingStartedAt = now()'
             ],
             // ... other block settings
@@ -156,8 +156,8 @@ return [
         'delta' => [
             'extends' => 'main',
             'sql_query_pre' => [
-                'sph_counter' => 'INSERT INTO sphCounter  (indexingStartedAt, caption) \
-                    VALUES(NOW(), \'delta\') \
+                'sph_counter' => 'INSERT INTO sphCounter  (indexingStartedAt, caption)
+                    VALUES(NOW(), \'delta\')
                     ON DUPLICATE KEY UPDATE indexingStartedAt = now()'
              ],
              // ... other block settings
@@ -194,7 +194,7 @@ The example of usage is storing database connection settings in `/path/to/config
 
 Note that in internal representation `indexer`, `searchd` and `common` sections are converted into sections containing self-titled blocks. This allows them to be used in the same way as `source` and `index` sections. So, as in the last example, you can store common settings for `indexer`, `searchd` and `common` sections in separate blocks and inherit from them.
 ## Placeholders
-Each value of Sphinx parameter may contain a placeholder in `::path.to.value:`: format. Placeholder uses dot notation, so it is possible to extract values from multidimensional arrays.
+Each value of Sphinx parameter may contain a placeholder in `::path.to.value:`: format. Placeholder uses dot notation, so it is possible to extract values from multidimensional arrays. The replacement values themselves can contain placeholders. So placeholders are dereferenced recursively.
 
 There are two ways of passing values:
 - You can pass global values for entire configuration using `setPlaceholderValues()` method.  
@@ -208,8 +208,8 @@ return [
            'sql_query_pre' => [
                'SET NAMES utf8',
                // ... other queries
-               'INSERT INTO sphCounter  (indexingStartedAt, caption) \
-                   VALUES(NOW(), \'::sourceName::\') \
+               'INSERT INTO sphCounter  (indexingStartedAt, caption)
+                   VALUES(NOW(), \'::sourceName::\')
                    ON DUPLICATE KEY UPDATE indexingStartedAt = now()'
            ],
            'placeholderValues' => [
@@ -248,6 +248,12 @@ source delta : main {
     // ... other block settings
 }
 ```
+## Parameter values
+Multiline values are automatically padded with a trailing slash. This is useful when formatting queries.
+
+## Custom parameters
+Parameter will be ignored if its name starts with an underscore. This allows you to add parameters for internal use, for example, if the configuration is being pre-processed and you want to be able to configure this process.
+
 ## Method list
 - **```setSrcPath($srcPath)```**  
 Sets the directory containing source configurations,

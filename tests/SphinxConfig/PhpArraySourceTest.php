@@ -5,7 +5,7 @@ use \Ergnuor\SphinxConfig\Section\Source\PhpArray;
 use \Ergnuor\SphinxConfig\Exception\SourceException;
 
 
-class SectionSourcePhpArrayTest extends TestCase
+class PhpArraySourceTest extends TestCase
 {
     public function testPathRequiredException()
     {
@@ -15,7 +15,7 @@ class SectionSourcePhpArrayTest extends TestCase
         $source = new PhpArray(null);
     }
 
-    public function testDirectoryDoesNotExstsException()
+    public function testDirectoryDoesNotExistsException()
     {
         $dirPath = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'unknownDirectory';
 

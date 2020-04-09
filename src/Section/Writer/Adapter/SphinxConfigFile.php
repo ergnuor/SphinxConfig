@@ -11,7 +11,7 @@ class SphinxConfigFile extends SphinxConfigAbstract
      *
      * @var null|string
      */
-    protected $dstPath = null;
+    private $dstPath = null;
 
     /**
      * File constructor.
