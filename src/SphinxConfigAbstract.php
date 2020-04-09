@@ -19,17 +19,17 @@ abstract class SphinxConfigAbstract
      *
      * @var array
      */
-    protected $placeholderValues = [];
+    private $placeholderValues = [];
 
     /**
      * @var null|Section\SourceInterface
      */
-    protected $sourceObject = null;
+    private $sourceObject = null;
 
     /**
      * @var null|Section\Writer\AdapterInterface
      */
-    protected $writerObject = null;
+    private $writerObject = null;
 
 
     /**
@@ -39,7 +39,8 @@ abstract class SphinxConfigAbstract
     public function __construct(
         Section\SourceInterface $sourceObject = null,
         Section\Writer\AdapterInterface $writerObject = null
-    ) {
+    )
+    {
         $this->sourceObject = $sourceObject;
         $this->writerObject = $writerObject;
     }
@@ -105,7 +106,7 @@ abstract class SphinxConfigAbstract
      * @param Section\Writer\AdapterInterface $writerAdapter
      * @return Section\Writer\MultiBlock|Section\WriterAbstract
      */
-    protected function getWriterObject(Section\MultiBlock $section, Section\Writer\AdapterInterface $writerAdapter)
+    private function getWriterObject(Section\MultiBlock $section, Section\Writer\AdapterInterface $writerAdapter)
     {
         $sectionClassName = get_class($section);
 
@@ -131,12 +132,13 @@ abstract class SphinxConfigAbstract
      * @param SourceInterface $sourceObject
      * @return Section\MultiBlock
      */
-    protected function getSectionObject(
+    private function getSectionObject(
         $sectionClassName,
         $configName,
         $sectionName,
         SourceInterface $sourceObject
-    ) {
+    )
+    {
         return new $sectionClassName(
             $configName,
             $sectionName,

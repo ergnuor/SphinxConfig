@@ -5,7 +5,7 @@ use \Ergnuor\SphinxConfig\Section\Writer\Adapter\SphinxConfigFile;
 use \Ergnuor\SphinxConfig\Exception\WriterException;
 
 
-class SectionWriterAdapterSphinxConfigFileTest extends TestCase
+class SphinxConfigFileWriterAdapterTest extends TestCase
 {
     public function testPathRequiredException()
     {

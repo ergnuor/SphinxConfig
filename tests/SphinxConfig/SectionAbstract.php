@@ -1,4 +1,5 @@
 <?php
+
 namespace Ergnuor\SphinxConfig\Tests;
 
 use \Ergnuor\SphinxConfig\Section\SourceInterface;
@@ -8,35 +9,48 @@ abstract class SectionAbstract extends TestCase
     /**
      * @dataProvider configProvider
      */
-    public function testParameters($sourceLoad, $sourceLoadBlocks, $expected, $globalPlaceholders)
+    public function testConfigTransformations(
+        $sourceForLoadMethod,
+        $sourceForLoadBlocksMethod,
+        $expected,
+        $globalPlaceholders
+    )
     {
-        $mockSource = $this->getMockBuilder(SourceInterface::class)
-            ->getMock();
-
-        $mockSource->expects($this->any())
-            ->method('load')
-            ->will($this->returnCallback(function ($configName, $sectionName) use ($sourceLoad) {
-                return isset($sourceLoad[$configName]) ? $sourceLoad[$configName] : [];
-            }));
-
-        $mockSource->expects($this->any())
-            ->method('loadBlocks')
-            ->will($this->returnCallback(function ($configName, $sectionName) use ($sourceLoadBlocks) {
-                return isset($sourceLoadBlocks[$configName]) ? $sourceLoadBlocks[$configName] : [];
-            }));
-
-        $sectionClass = $this->getSectionClass(
-            $mockSource,
-            $globalPlaceholders
-        );
+        $sourceMock = $this->getConfigSourceMock($sourceForLoadMethod, $sourceForLoadBlocksMethod);
 
         $this->assertSame(
             $expected,
-            $sectionClass->getConfig()
+            $this->getSectionConfig(
+                $sourceMock,
+                $globalPlaceholders
+            )
+        );
+    }
+
+    protected function getSectionConfig(
+        SourceInterface $source,
+        array $globalPlaceholderValues
+    )
+    {
+        $sectionClass = $this->getSectionClass(
+            $source,
+            $globalPlaceholderValues
         );
 
-//        echo var_export($sectionClass->getConfig(), true);
-//        exit;
+        return $sectionClass->getConfig();
+    }
+
+    /**
+     * @param $sourceForLoadMethod
+     * @param $sourceForLoadBlocksMethod
+     * @return \Ergnuor\SphinxConfig\Section\SourceInterface
+     */
+    protected function getConfigSourceMock($sourceForLoadMethod, $sourceForLoadBlocksMethod)
+    {
+        return new Mock\Source(
+            $sourceForLoadMethod,
+            $sourceForLoadBlocksMethod
+        );
     }
 
     /**

@@ -35,14 +35,14 @@ class MultiBlock
      *
      * @var array
      */
-    protected $globalPlaceholderValues = [];
+    private $globalPlaceholderValues = [];
 
     /**
      * List of sphinx multi-value parameters
      *
      * @var array
      */
-    protected $multiValueParamList = [
+    private $multiValueParamList = [
         'sql_query_pre',
         'sql_joined_field',
         'sql_attr_uint',
@@ -91,7 +91,7 @@ class MultiBlock
      *
      * @var array
      */
-    protected $systemParamsList = [
+    private $systemParamsList = [
         'extends',
         'extendsConfig',
         'config',
@@ -104,7 +104,7 @@ class MultiBlock
      *
      * @var SourceInterface|null
      */
-    protected $source = null;
+    private $source = null;
 
     /**
      * @param string $configName
@@ -117,7 +117,8 @@ class MultiBlock
         $sectionName,
         SourceInterface $source,
         array $globalPlaceholderValues
-    ) {
+    )
+    {
         $this->configName = (string)$configName;
         $this->sectionName = (string)$sectionName;
         $this->source = $source;
@@ -188,12 +189,12 @@ class MultiBlock
      *
      * @throws SectionException
      */
-    protected function assemble()
+    private function assemble()
     {
         $this->pullExternalBlocks();
         $this->sortByNestedLevel();
         $this->processInheritance();
-        $this->applyPlaceholderValues();
+        $this->processParamsValues();
         $this->filterPseudoBlocks();
     }
 
@@ -202,10 +203,11 @@ class MultiBlock
      *
      * @throws SectionException
      */
-    protected function pullExternalBlocks()
+    private function pullExternalBlocks()
     {
         $externalInheritanceBlocks = $this->getExternalInheritanceBlocks($this->configName);
 
+        $pulledBlocks = [];
 
         foreach ($externalInheritanceBlocks as $blockName => $blockConfig) {
             $currentBlockConfig = $blockConfig;
@@ -236,6 +238,10 @@ class MultiBlock
                     );
                 }
 
+                if (in_array($pulledBlockConfig['fullBlockName'], $pulledBlocks)) {
+                    break;
+                }
+
                 if (isset($this->configs[$this->configName][$extends])) {
                     $this->throwPullExternalBlocksException(
                         "There is a name conflict while pulling external blocks. Block '{$extends}' already exists.",
@@ -245,6 +251,7 @@ class MultiBlock
                 }
 
                 $blocksInheritanceStack[] = $pulledBlockConfig['fullBlockName'];
+                $pulledBlocks[] = $pulledBlockConfig['fullBlockName'];
 
                 $this->configs[$this->configName][$extends] = $pulledBlockConfig;
 
@@ -259,11 +266,12 @@ class MultiBlock
      * @param null|string $supposedFullBlockName
      * @throws SectionException
      */
-    protected function throwPullExternalBlocksException(
+    private function throwPullExternalBlocksException(
         $message,
         $blocksInheritanceStack,
         $supposedFullBlockName = null
-    ) {
+    )
+    {
 
         if (!is_null($supposedFullBlockName)) {
             $blocksInheritanceStack[] = $supposedFullBlockName;
@@ -277,7 +285,7 @@ class MultiBlock
      * Sorts blocks of the current config according to the inheritance
      * @throws SectionException
      */
-    protected function sortByNestedLevel()
+    private function sortByNestedLevel()
     {
         foreach ($this->configs[$this->configName] as $blockName => $blockConfig) {
             if (isset($this->configs[$this->configName][$blockName]['nestedLevel'])) {
@@ -309,7 +317,7 @@ class MultiBlock
      * @return array
      * @throws SectionException
      */
-    protected function makeBlockInheritancePath($blockConfig)
+    private function makeBlockInheritancePath($blockConfig)
     {
         $inheritancePath = [$blockConfig['name']];
         $parentBlocks = $this->getParentBlocks($blockConfig);
@@ -319,18 +327,6 @@ class MultiBlock
         );
 
         return $inheritancePath;
-
-        /*$inheritancePath = [$blockName];
-        while (isset($blockConfig['extends'])) {
-            if (!isset($this->config[$this->configName][$blockConfig['extends']])) {
-                throw new \Exception("Unknown parent block '{$blockConfig['extends']}'");
-            }
-            $inheritancePath[] = $blockConfig['extends'];
-
-            $blockConfig = $this->config[$this->configName][$blockConfig['extends']];
-        }*/
-
-//        return $inheritancePath;
     }
 
     /**
@@ -338,7 +334,7 @@ class MultiBlock
      *
      * @param array $inheritancePath
      */
-    protected function setNestedLevel($inheritancePath)
+    private function setNestedLevel($inheritancePath)
     {
         $nestedLevel = 1;
         $blockName = array_pop($inheritancePath);
@@ -351,12 +347,12 @@ class MultiBlock
     /**
      * @throws SectionException
      */
-    protected function processInheritance()
+    private function processInheritance()
     {
         foreach ($this->configs[$this->configName] as $blockName => $blockConfig) {
-            $blockConfig = $this->processSphinxConfigInheritance($blockConfig);
-
+            $blockConfig = $this->processMultiValueParamsInheritance($blockConfig);
             $blockConfig = $this->processPseudoBlockInheritance($blockConfig);
+            $blockConfig = $this->propagatePlaceholderValues($blockConfig);
 
             $this->configs[$this->configName][$blockName] = $blockConfig;
         }
@@ -370,24 +366,26 @@ class MultiBlock
      * @return array
      * @throws SectionException
      */
-    protected function processSphinxConfigInheritance($blockConfig)
+    private function processMultiValueParamsInheritance($blockConfig)
     {
         foreach ($blockConfig['config'] as $paramName => $paramValue) {
             $paramModifier = isset($blockConfig['paramModifier'][$paramName]) ?
                 $blockConfig['paramModifier'][$paramName] : null;
 
             if (
-                $this->isMultiValueParam($paramName) &&
-                $paramModifier != 'clear'
+                !$this->isMultiValueParam($paramName) ||
+                $paramModifier == 'clear'
             ) {
-                $parentParamValue = $this->getClosestParentParamValue($paramName, $blockConfig);
+                continue;
+            }
 
-                if (!is_null($parentParamValue)) {
-                    $blockConfig['config'][$paramName] = $this->processSphinxParamInheritance(
-                        $paramValue,
-                        $parentParamValue
-                    );
-                }
+            $parentParamValue = $this->getClosestParentParamValue($paramName, $blockConfig);
+
+            if (!is_null($parentParamValue)) {
+                $blockConfig['config'][$paramName] = $this->mergeMultiValueParamValues(
+                    $paramValue,
+                    $parentParamValue
+                );
             }
         }
         return $blockConfig;
@@ -401,7 +399,7 @@ class MultiBlock
      * @param array $parentParamValue
      * @return array
      */
-    protected function processSphinxParamInheritance($paramValue, $parentParamValue)
+    private function mergeMultiValueParamValues($paramValue, $parentParamValue)
     {
         $namedValues = array_filter(
             $paramValue,
@@ -432,7 +430,7 @@ class MultiBlock
      * @return array
      * @throws SectionException
      */
-    protected function processPseudoBlockInheritance($blockConfig)
+    private function processPseudoBlockInheritance($blockConfig)
     {
         $parentBlockConfig = $this->getParentBlock($blockConfig);
 
@@ -448,38 +446,32 @@ class MultiBlock
         return $blockConfig;
     }
 
+    private function propagatePlaceholderValues($blockConfig)
+    {
+        $parentBlockConfig = $this->getParentBlock($blockConfig);
+
+        if (!is_null($parentBlockConfig)) {
+            $blockConfig['placeholderValues'] = array_replace_recursive(
+                $parentBlockConfig['placeholderValues'],
+                $blockConfig['placeholderValues']
+            );
+        }
+
+        return $blockConfig;
+    }
+
     /**
      * @throws SectionException
      */
-    protected function applyPlaceholderValues()
+    private function processParamsValues()
     {
         foreach ($this->configs[$this->configName] as $blockName => $blockConfig) {
-            $parentBlockConfig = $this->getParentBlock($blockConfig);
-
-            if (!is_null($parentBlockConfig)) {
-                $blockConfig['placeholderValues'] = array_replace_recursive(
-                    $parentBlockConfig['placeholderValues'],
-                    $blockConfig['placeholderValues']
-                );
-            }
-
             foreach ($blockConfig['config'] as $paramName => $paramValue) {
                 $paramValue = (array)$paramValue;
 
                 foreach ($paramValue as $paramKey => $currentValue) {
-                    $placeholders = $this->parsePlaceholders($currentValue);
-
-                    foreach ($placeholders as $placeholder) {
-                        $placeholderValue = $this->findByPath(
-                            array_replace_recursive(
-                                $this->globalPlaceholderValues,
-                                $blockConfig['placeholderValues']
-                            ),
-                            $this->clearPlaceholderBoundaries($placeholder)
-                        );
-
-                        $currentValue = str_replace($placeholder, (string)$placeholderValue, $currentValue);
-                    }
+                    $currentValue = $this->applyPlaceholdersValues($currentValue, $blockConfig);
+                    $currentValue = $this->processMultilineValue($currentValue);
 
                     $paramValue[$paramKey] = $currentValue;
                 }
@@ -495,13 +487,60 @@ class MultiBlock
         }
     }
 
+
+    /**
+     * @param $currentValue
+     * @param $blockConfig
+     * @return mixed
+     */
+
+    private function applyPlaceholdersValues($currentValue, $blockConfig, $processedPlaceholders = [])
+    {
+        $placeholders = $this->parsePlaceholders($currentValue);
+
+        if (empty($placeholders)) {
+            return $currentValue;
+        }
+
+        if (!empty(array_intersect($placeholders, $processedPlaceholders))) {
+            $this->throwSectionException(
+                "Circular placeholders detected. Processed placeholders: " . implode(' ,', $processedPlaceholders)
+            );
+        }
+
+        $processedPlaceholders = array_merge($processedPlaceholders, $placeholders);
+
+        foreach ($placeholders as $placeholder) {
+            $placeholderValue = $this->findByPath(
+                array_replace_recursive(
+                    $this->globalPlaceholderValues,
+                    $blockConfig['placeholderValues']
+                ),
+                $this->clearPlaceholderBoundaries($placeholder)
+            );
+
+            if (is_array($placeholderValue)) {
+                $placeholderValue = implode(', ', $placeholderValue);
+            }
+
+            $currentValue = str_replace($placeholder, (string)$placeholderValue, $currentValue);
+        }
+
+        return $this->applyPlaceholdersValues($currentValue, $blockConfig, $processedPlaceholders);
+    }
+
+    private function processMultilineValue($value)
+    {
+        return preg_replace('/([\r\n]+)/', ' \\\$1', $value);
+    }
+
     /**
      * Returns placeholder name without boundaries
      *
      * @param string $placeholderWithBoundaries
      * @return string
      */
-    protected function clearPlaceholderBoundaries($placeholderWithBoundaries)
+    private function clearPlaceholderBoundaries($placeholderWithBoundaries)
     {
         $placeholderWithBoundaries = preg_replace('/^::/', '', $placeholderWithBoundaries);
         $placeholderWithBoundaries = preg_replace('/::$/', '', $placeholderWithBoundaries);
@@ -516,7 +555,7 @@ class MultiBlock
      * @param string $keyPath
      * @return null|array
      */
-    protected function findByPath($array, $keyPath)
+    private function findByPath($array, $keyPath)
     {
         $keyPathParts = explode('.', $keyPath);
 
@@ -537,7 +576,7 @@ class MultiBlock
      * @param string $value
      * @return array
      */
-    protected function parsePlaceholders($value)
+    private function parsePlaceholders($value)
     {
         preg_match_all('/::(?:.+?)(?=::)::/', $value, $m);
 
@@ -548,7 +587,7 @@ class MultiBlock
      * Removes pseudo blocks
      * @throws SectionException
      */
-    protected function filterPseudoBlocks()
+    private function filterPseudoBlocks()
     {
         $realBlocks = array_filter(
             $this->configs[$this->configName],
@@ -582,7 +621,7 @@ class MultiBlock
      * @return null|string
      * @throws SectionException
      */
-    protected function getClosestParentRealBlockName($blockConfig)
+    private function getClosestParentRealBlockName($blockConfig)
     {
         $parentBlocks = $this->getParentBlocks($blockConfig);
 
@@ -602,7 +641,7 @@ class MultiBlock
      * @return array|null
      * @throws SectionException
      */
-    protected function getParentBlock($blockConfig)
+    private function getParentBlock($blockConfig)
     {
         $parentBlocks = $this->getParentBlocks($blockConfig);
 
@@ -620,7 +659,7 @@ class MultiBlock
      * @return array
      * @throws SectionException
      */
-    protected function getParentBlocks($blockConfig)
+    private function getParentBlocks($blockConfig)
     {
         $parentBlocks = [];
         while (isset($blockConfig['extends'])) {
@@ -645,7 +684,7 @@ class MultiBlock
      * @return null|string|array
      * @throws SectionException
      */
-    protected function getClosestParentParamValue($paramName, $blockConfig)
+    private function getClosestParentParamValue($paramName, $blockConfig)
     {
         $parentBlocks = $this->getParentBlocks($blockConfig);
 
@@ -680,7 +719,7 @@ class MultiBlock
     /**
      * @param string $configName
      */
-    protected function normalizeConfig($configName)
+    private function normalizeConfig($configName)
     {
         foreach ($this->configs[$configName] as $blockName => $blockConfig) {
             $blockConfig = (array)$blockConfig;
@@ -694,6 +733,8 @@ class MultiBlock
                     $blockConfig['extendsConfig'] = $this->configName;
                 }
             }
+
+            $blockConfig = $this->removeCustomParams($blockConfig);
 
             $blockConfig['config'] = array_diff_key(
                 $blockConfig,
@@ -717,11 +758,22 @@ class MultiBlock
         }
     }
 
+    private function removeCustomParams($blockConfig)
+    {
+        return array_filter(
+            $blockConfig,
+            function ($k) {
+                return $k[0] != '_';
+            },
+            ARRAY_FILTER_USE_KEY
+        );
+    }
+
     /**
      * @param array $blockConfig
      * @return array
      */
-    protected function normalizeSphinxConfig($blockConfig)
+    private function normalizeSphinxConfig($blockConfig)
     {
         $blockConfig['paramModifier'] = [];
         $normalizedConfig = [];
@@ -751,7 +803,7 @@ class MultiBlock
      * @param string $paramName
      * @return array
      */
-    protected function parseParamName($paramName)
+    private function parseParamName($paramName)
     {
         $paramNameParts = explode(':', $paramName);
         return [
@@ -766,7 +818,7 @@ class MultiBlock
      * @param string $paramName
      * @return bool
      */
-    protected function isMultiValueParam($paramName)
+    private function isMultiValueParam($paramName)
     {
         return in_array(
             $paramName,
@@ -779,7 +831,7 @@ class MultiBlock
      *
      * @return array
      */
-    protected function getSystemParamsList()
+    private function getSystemParamsList()
     {
         return $this->systemParamsList;
     }
@@ -790,7 +842,7 @@ class MultiBlock
      * @param string $configName
      * @return array
      */
-    protected function getExternalInheritanceBlocks($configName)
+    private function getExternalInheritanceBlocks($configName)
     {
         return array_filter(
             $this->configs[$configName],
@@ -806,7 +858,7 @@ class MultiBlock
      *
      * @param string $configName
      */
-    protected function loadExternalConfigs($configName)
+    private function loadExternalConfigs($configName)
     {
         $externalConfigs = $this->getExternalConfigNames($configName);
 
@@ -823,7 +875,7 @@ class MultiBlock
      * @param string $configName
      * @return array
      */
-    protected function getExternalConfigNames($configName)
+    private function getExternalConfigNames($configName)
     {
         return array_unique(
             array_column(
@@ -846,7 +898,7 @@ class MultiBlock
      * @param string $configName
      * @return array
      */
-    protected function loadConfigBlocks($configName)
+    private function loadConfigBlocks($configName)
     {
         return $this->source->loadBlocks($configName, $this->sectionName);
     }
@@ -855,7 +907,7 @@ class MultiBlock
      * @param string $message
      * @throws SectionException
      */
-    protected function throwSectionException($message)
+    private function throwSectionException($message)
     {
         throw new SectionException("An error occurred in '{$this->sectionName}' section. {$message}");
     }

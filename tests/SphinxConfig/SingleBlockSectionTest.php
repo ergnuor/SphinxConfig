@@ -4,7 +4,7 @@ use \Ergnuor\SphinxConfig\Tests\SectionAbstract;
 use \Ergnuor\SphinxConfig\Section\SingleBlock;
 use \Ergnuor\SphinxConfig\Section\SourceInterface;
 
-class SectionSingleBlockTest extends SectionAbstract
+class SingleBlockSectionTest extends SectionAbstract
 {
     /**
      * @param string $configName

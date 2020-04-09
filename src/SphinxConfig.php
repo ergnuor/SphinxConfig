@@ -28,14 +28,14 @@ class SphinxConfig extends SphinxConfigAbstract
      *
      * @var null|string
      */
-    protected $srcPath = null;
+    private $srcPath = null;
 
     /**
      * The path to the directory for the resulting config
      *
      * @var null|string
      */
-    protected $dstPath = null;
+    private $dstPath = null;
 
     /**
      * Sets the default path to the directory containing the configs
