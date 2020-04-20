@@ -4,15 +4,11 @@ namespace Ergnuor\SphinxConfig\Tests;
 
 class TestCase extends \PHPUnit\Framework\TestCase
 {
-    protected function getConfigRoot()
+    protected function getValueOfInaccessibleProperty($obj, $property)
     {
-        return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'configRoot';
+        $reflection = new \ReflectionClass(get_class($obj));
+        $property = $reflection->getProperty($property);
+        $property->setAccessible(true);
+        return $property->getValue($obj);
     }
-
-    /*protected function assertArraysEqual($array1, $array2) {
-        $this->assertEquals(
-            serialize($array1),
-            serialize($array2)
-        );
-    }*/
 }
