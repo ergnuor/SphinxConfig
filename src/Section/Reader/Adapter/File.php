@@ -13,7 +13,7 @@ abstract class File implements Adapter
      *
      * @var array[]
      */
-    protected $multiSectionConfigs = [];
+    private $multiSectionConfigs = [];
     protected $extension = 'conf';
     /**
      * The path to the directory containing the configs

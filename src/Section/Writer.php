@@ -11,7 +11,7 @@ class Writer
     /**
      * @var Writer\Adapter|null
      */
-    protected $writerAdapter = null;
+    private $writerAdapter = null;
 
     /**
      * @param Writer\Adapter $writerAdapter
@@ -45,7 +45,7 @@ class Writer
      * @param array $config
      * @param Section $section
      */
-    protected function writeSingleBlockSection($config, Section $section)
+    private function writeSingleBlockSection($config, Section $section)
     {
         $sectionName = $section->getName();
 
@@ -69,7 +69,7 @@ class Writer
      * @param string $paramName
      * @param string $paramValue
      */
-    protected function writeParam($paramName, $paramValue)
+    private function writeParam($paramName, $paramValue)
     {
         $paramValue = (array)$paramValue;
         foreach ($paramValue as $curParamValue) {
@@ -81,7 +81,7 @@ class Writer
      * @param array $config
      * @param Section $section
      */
-    protected function writeMultiBlockSection($config, Section $section)
+    private function writeMultiBlockSection($config, Section $section)
     {
         foreach ($config as $blockName => $blockConfig) {
             $extends = isset($blockConfig['extends']) ? $blockConfig['extends'] : null;

@@ -10,7 +10,7 @@ class NativeConfig implements Adapter
     /**
      * @var string
      */
-    protected $buffer = '';
+    private $buffer = '';
 
     /**
      * Directory to which the config file will be saved

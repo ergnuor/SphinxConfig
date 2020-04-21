@@ -12,19 +12,19 @@ class Section
      *
      * @var array
      */
-    protected $configs = [];
+    private $configs = [];
 
     /**
      * Contains current config name
      *
      * @var string
      */
-    protected $configName;
+    private $configName;
 
     /**
      * @var string
      */
-    protected $sectionName;
+    private $sectionName;
 
     /**
      * @var array
@@ -147,7 +147,7 @@ class Section
     /**
      * @param string $configName
      */
-    protected function readConfig($configName)
+    private function readConfig($configName)
     {
         $this->configs[$configName] = $this->reader->readConfig($configName, $this);
 
@@ -832,7 +832,7 @@ class Section
      * @param array $blockConfig
      * @return array
      */
-    protected function removeSystemParameters($blockConfig)
+    private function removeSystemParameters($blockConfig)
     {
         return array_intersect_key(
             $blockConfig,
