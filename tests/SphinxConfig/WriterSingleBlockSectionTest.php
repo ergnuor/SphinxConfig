@@ -4,21 +4,19 @@ namespace Ergnuor\SphinxConfig\Tests;
 
 use Ergnuor\SphinxConfig\Section\Type as SectionType;
 
-
 /**
  * @uses \Ergnuor\SphinxConfig\Section\Type
- * @uses \Ergnuor\SphinxConfig\Section\Writer\Adapter
  * @uses \Ergnuor\SphinxConfig\Section
  */
 class WriterSingleBlockSectionTest extends WriterCase
 {
-    public function setUp()
+    public function setUp(): void
     {
         $this->setSectionName(SectionType::SEARCHD);
         parent::setUp();
     }
 
-    public function testWriteSingleBlockSection()
+    public function testWriteSingleBlockSection(): void
     {
         $this->adapterExpectations(
             [1, 'startSingleBlockSection', [[$this->sectionName]]],
@@ -35,7 +33,7 @@ class WriterSingleBlockSectionTest extends WriterCase
         ]);
     }
 
-    public function testWriteSingleBlockSectionButSectionIsEmpty()
+    public function testWriteSingleBlockSectionButSectionIsEmpty(): void
     {
         $this->adapterExpectations(
             [0, 'startSingleBlockSection'],
@@ -46,7 +44,7 @@ class WriterSingleBlockSectionTest extends WriterCase
         $this->write([$this->sectionName => [],]);
     }
 
-    public function testWriteSingleBlockSectionButSectionConfigIsEmpty()
+    public function testWriteSingleBlockSectionButSectionConfigIsEmpty(): void
     {
         $this->adapterExpectations(
             [1, 'startSingleBlockSection', [[$this->sectionName]]],

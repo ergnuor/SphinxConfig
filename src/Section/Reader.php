@@ -2,27 +2,24 @@
 
 namespace Ergnuor\SphinxConfig\Section;
 
-
-use Ergnuor\SphinxConfig\Section;
+use Ergnuor\SphinxConfig\{
+    Section,
+    Section\Reader\Adapter as ReaderAdapter
+};
 
 class Reader
 {
     /**
-     * @var Reader\Adapter
+     * @var ReaderAdapter
      */
     private $readerAdapter;
 
-    public function __construct(Reader\Adapter $readerAdapter)
+    public function __construct(ReaderAdapter $readerAdapter)
     {
         $this->readerAdapter = $readerAdapter;
     }
 
-    /**
-     * @param string $configName
-     * @param Section $section
-     * @return array
-     */
-    final public function readConfig($configName, Section $section)
+    final public function readConfig(string $configName, Section $section): array
     {
         $config = $this->readerAdapter->readConfig($configName, $section);
 
@@ -47,25 +44,29 @@ class Reader
      * the real 'indexer', 'searchd' and 'common' sections (single block sections) do not contain blocks.
      * But internally they are expected to have the same structure, so we transform them into a sections with a block.
      * The block name is equal to the section name.
-     *
-     * @param $config
+     * @param array $config
      * @param Section $section
      * @return array
      */
-    private function transformToMultiBlockSection($config, Section $section)
+    private function transformToMultiBlockSection(array $config, Section $section): array
     {
         $sectionName = $section->getName();
 
-        if (
-            isset($config[$sectionName]) &&
-            is_array($config[$sectionName])
-        ) {
+        if ($this->isAlreadyHaveSection($config, $sectionName)) {
             return $config;
         }
 
         return [
             $sectionName => $config,
         ];
+    }
+
+    private function isAlreadyHaveSection(array $config, string $sectionName): bool
+    {
+        return (
+            isset($config[$sectionName]) &&
+            is_array($config[$sectionName])
+        );
     }
 
     /**
@@ -76,13 +77,12 @@ class Reader
      * (the block which name is equal to the section name),
      * due to only this block will be included in the final configuration for the single block sections.
      * So we mark parent blocks as pseudo.
-     *
-     * @param $configName
+     * @param string $configName
      * @param $config
      * @param Section $section
      * @return array
      */
-    private function transformBlocksToPseudo($configName, $config, Section $section)
+    private function transformBlocksToPseudo(string $configName, $config, Section $section): array
     {
         array_walk(
             $config,

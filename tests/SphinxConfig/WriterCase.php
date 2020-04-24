@@ -2,15 +2,20 @@
 
 namespace Ergnuor\SphinxConfig\Tests;
 
-use Ergnuor\SphinxConfig\Section\Type as SectionType;
-use Ergnuor\SphinxConfig\Section\Writer;
-use Ergnuor\SphinxConfig\Section\Writer\Adapter as WriterAdapter;
+use PHPUnit\Framework\MockObject\MockObject;
+use Ergnuor\SphinxConfig\Section\{
+    Writer,
+    Writer\Adapter as WriterAdapter
+};
 
 class WriterCase extends SectionCase
 {
+    /**
+     * @var Writer
+     */
     protected $writer;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->writerAdapter = $this->getWriterAdapterMock();
         $this->writer = new Writer($this->writerAdapter);
@@ -19,17 +24,20 @@ class WriterCase extends SectionCase
         $this->setUpSectionParameterObject();
     }
 
-    private function getWriterAdapterMock()
+    /**
+     * @return MockObject|WriterAdapter
+     */
+    private function getWriterAdapterMock(): MockObject
     {
         return $this->getMockForAbstractClass(WriterAdapter::class);
     }
 
-    protected function write($config)
+    protected function write(array $config): void
     {
         $this->writer->write($config, $this->sectionParameterObject);
     }
 
-    protected function adapterExpectations(...$expectations)
+    protected function adapterExpectations(array ...$expectations): void
     {
         foreach ($expectations as $expectationConfig) {
             $mocker = $this->writerAdapter->expects($this->exactly($expectationConfig[0]));
@@ -38,17 +46,5 @@ class WriterCase extends SectionCase
                 $mocker->withConsecutive(...$expectationConfig[2]);
             }
         }
-    }
-
-    private function writeSingleSection($config)
-    {
-        $this->setSectionName(SectionType::SEARCHD);
-        $this->write($config);
-    }
-
-    private function writeMultiSection($config)
-    {
-        $this->setSectionName(SectionType::SOURCE);
-        $this->write($config);
     }
 }

@@ -4,14 +4,19 @@
 namespace Ergnuor\SphinxConfig\Tests\Stub;
 
 
-use Ergnuor\SphinxConfig\Section;
-use Ergnuor\SphinxConfig\Section\Reader\Adapter;
+use Ergnuor\SphinxConfig\{
+    Section,
+    Section\Reader\Adapter
+};
 
 class ReaderAdapter implements Adapter
 {
+    /**
+     * @var array
+     */
     private $sourceData = [];
 
-    public function readConfig($configName, Section $section)
+    public function readConfig(string $configName, Section $section): array
     {
         if (!isset($this->sourceData[$configName])) {
             return [];
@@ -27,21 +32,18 @@ class ReaderAdapter implements Adapter
     /**
      * @inheritDoc
      */
-    public function readConfigBlocks($configName, Section $section)
+    public function readConfigBlocks(string $configName, Section $section): array
     {
         return [];
     }
 
 
-    public function reset()
+    public function reset(): void
     {
         $this->sourceData = [];
     }
 
-    /**
-     * @param mixed $sourceData
-     */
-    public function setSourceData($sourceData)
+    public function setSourceData(array $sourceData): void
     {
         $this->sourceData = $sourceData;
     }

@@ -8,7 +8,7 @@ class PhpArray extends File
 {
     protected $extension = 'php';
 
-    protected function readFile($filePath)
+    protected function readFile(string $filePath): array
     {
         if (function_exists('opcache_invalidate')) {
             opcache_invalidate($filePath, true);
@@ -16,6 +16,6 @@ class PhpArray extends File
             apc_compile_file($filePath);
         }
 
-        return (array)include($filePath);
+        return include($filePath);
     }
 }

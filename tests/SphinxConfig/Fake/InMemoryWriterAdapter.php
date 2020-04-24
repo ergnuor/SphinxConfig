@@ -8,36 +8,47 @@ use Ergnuor\SphinxConfig\Section\Writer\Adapter;
 
 class InMemoryWriterAdapter implements Adapter
 {
+    /**
+     * @var array
+     */
     private $config = [];
 
+    /**
+     * @var string
+     */
     private $currentSectionName;
+
+    /**
+     * @var string
+     */
     private $currentBlockName;
 
-    public function reset()
+    public function reset(): void
     {
         $this->config = [];
         $this->resetCurrentSectionAndBlockName();
     }
 
-    private function resetCurrentSectionAndBlockName()
+    private function resetCurrentSectionAndBlockName(): void
     {
         $this->currentSectionName = null;
         $this->currentBlockName = null;
     }
 
-    public function write($configName)
+    public function write(string $configName): void
     {
     }
 
     /**
      * @inheritDoc
      */
-    public function startMultiBlockSection($sectionName, $blockName, $extends = null)
+    public function startMultiBlockSection(
+        string $sectionName,
+        string $blockName,
+        string $extends = null
+    ): void
     {
-        if (!isset($this->config[$sectionName])) {
-            $this->config[$sectionName] = [];
-        }
-
+        $this->config[$sectionName] = $this->config[$sectionName] ?? [];
         $this->config[$sectionName][$blockName] = [];
 
         if (!is_null($extends)) {
@@ -48,7 +59,7 @@ class InMemoryWriterAdapter implements Adapter
         $this->currentBlockName = $blockName;
     }
 
-    public function endMultiBlockSection()
+    public function endMultiBlockSection(): void
     {
         $this->resetCurrentSectionAndBlockName();
     }
@@ -56,14 +67,14 @@ class InMemoryWriterAdapter implements Adapter
     /**
      * @inheritDoc
      */
-    public function startSingleBlockSection($sectionName)
+    public function startSingleBlockSection(string $sectionName): void
     {
         $this->config[$sectionName] = $this->config[$sectionName] ?: [];
         $this->currentSectionName = $sectionName;
         $this->currentBlockName = null;
     }
 
-    public function endSingleBlockSection()
+    public function endSingleBlockSection(): void
     {
         $this->resetCurrentSectionAndBlockName();
     }
@@ -71,7 +82,7 @@ class InMemoryWriterAdapter implements Adapter
     /**
      * @inheritDoc
      */
-    public function writeParam($paramName, $paramValue)
+    public function writeParam(string $paramName, string $paramValue): void
     {
         $paramRoot = &$this->config[$this->currentSectionName];
         if (!is_null($this->currentBlockName)) {
@@ -91,7 +102,7 @@ class InMemoryWriterAdapter implements Adapter
         }
     }
 
-    public function getConfig()
+    public function getConfig(): array
     {
         return $this->config;
     }

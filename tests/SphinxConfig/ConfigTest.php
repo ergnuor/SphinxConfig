@@ -2,24 +2,40 @@
 
 namespace Ergnuor\SphinxConfig\Tests;
 
-use Ergnuor\SphinxConfig\Config;
-use Ergnuor\SphinxConfig\Section;
-use Ergnuor\SphinxConfig\Section\Type as SectionType;
-use Ergnuor\SphinxConfig\Section\Writer\Adapter as WriterAdapter;
-use \Ergnuor\SphinxConfig\Section\Reader\Adapter as ReaderAdapter;
+use Ergnuor\SphinxConfig\{
+    Config,
+    Section,
+    Section\Reader\Adapter as ReaderAdapter,
+    Section\Type as SectionType,
+    Section\Writer\Adapter as WriterAdapter
+};
+use PHPUnit\Framework\MockObject\MockObject;
 
+/**
+ * @uses \Ergnuor\SphinxConfig\Section\Type
+ * @uses \Ergnuor\SphinxConfig\Section
+ * @uses \Ergnuor\SphinxConfig\Section\Reader
+ * @uses \Ergnuor\SphinxConfig\Section\Writer
+ */
 class ConfigTest extends TestCase
 {
+    /**
+     * @var ReaderAdapter|MockObject
+     */
     private $_readerAdapter;
+
+    /**
+     * @var WriterAdapter|MockObject
+     */
     private $_writerAdapter;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->_readerAdapter = $this->getMockForAbstractClass(ReaderAdapter::class);
         $this->_writerAdapter = $this->getMockForAbstractClass(WriterAdapter::class);
     }
 
-    public function testPlaceholderValues()
+    public function testPlaceholderValues(): void
     {
         $config = $this->getConfig();
 
@@ -37,7 +53,7 @@ class ConfigTest extends TestCase
         );
     }
 
-    private function getConfig()
+    private function getConfig(): Config
     {
         return new Config(
             $this->_readerAdapter,
@@ -45,7 +61,7 @@ class ConfigTest extends TestCase
         );
     }
 
-    public function testTransform()
+    public function testTransform(): void
     {
         $configName = 'configName';
 
@@ -75,8 +91,9 @@ class ConfigTest extends TestCase
         $config->transform($configName);
     }
 
-    private function callbackSectionNameEquals($expectedSectionName) {
-        return function(Section $section) use($expectedSectionName) {
+    private function callbackSectionNameEquals(string $expectedSectionName): callable
+    {
+        return function (Section $section) use ($expectedSectionName): bool {
             return $section->getName() == $expectedSectionName;
         };
     }

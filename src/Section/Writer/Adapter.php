@@ -8,29 +8,21 @@ interface Adapter
     /**
      * Method called before the formation of sections
      */
-    public function reset();
+    public function reset(): void;
 
-    public function write($configName);
+    public function write(string $configName): void;
 
-    /**
-     * @param string $sectionName
-     * @param string $blockName
-     * @param null|string $extends
-     */
-    public function startMultiBlockSection($sectionName, $blockName, $extends = null);
+    public function startMultiBlockSection(
+        string $sectionName,
+        string $blockName,
+        string $extends = null
+    ): void;
 
-    public function endMultiBlockSection();
+    public function endMultiBlockSection(): void;
 
-    /**
-     * @param string $sectionName
-     */
-    public function startSingleBlockSection($sectionName);
+    public function startSingleBlockSection(string $sectionName): void;
 
-    public function endSingleBlockSection();
+    public function endSingleBlockSection(): void;
 
-    /**
-     * @param string $paramName
-     * @param string $paramValue
-     */
-    public function writeParam($paramName, $paramValue);
+    public function writeParam(string $paramName, string $paramValue): void;
 }

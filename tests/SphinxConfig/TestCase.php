@@ -4,7 +4,13 @@ namespace Ergnuor\SphinxConfig\Tests;
 
 class TestCase extends \PHPUnit\Framework\TestCase
 {
-    protected function getValueOfInaccessibleProperty($obj, $property)
+    /**
+     * @param object $obj
+     * @param string $property
+     * @return mixed
+     * @throws \ReflectionException
+     */
+    protected function getValueOfInaccessibleProperty(object $obj, string $property)
     {
         $reflection = new \ReflectionClass(get_class($obj));
         $property = $reflection->getProperty($property);

@@ -9,10 +9,10 @@
         "email": "brokeneye@gmail.com"
     },
     "require": {
-        "php": ">=5.6.0"
+        "php": "^7.3"
     },
     "require-dev": {
-        "phpunit/phpunit": "5.7.*"
+        "phpunit/phpunit": "^9.1"
     },
     "autoload": {
         "psr-4": {

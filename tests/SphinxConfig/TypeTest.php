@@ -4,8 +4,11 @@ namespace Ergnuor\SphinxConfig\Tests;
 
 use Ergnuor\SphinxConfig\Section\Type;
 
-class TypeTest extends \PHPUnit_Framework_TestCase
+class TypeTest extends \PHPUnit\Framework\TestCase
 {
+    /**
+     * @var array
+     */
     private $typeMap = [
         [
             'type' => Type::SOURCE,
@@ -30,7 +33,7 @@ class TypeTest extends \PHPUnit_Framework_TestCase
     ];
 
 
-    public function testGetTypes()
+    public function testGetTypes(): void
     {
         $this->assertSame(
             $this->getTypes(),
@@ -38,7 +41,7 @@ class TypeTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    private function getTypes()
+    private function getTypes(): array
     {
         return array_column($this->typeMap, 'type');
     }
@@ -48,19 +51,19 @@ class TypeTest extends \PHPUnit_Framework_TestCase
      * @param $type
      * @param $isMultiBlock
      */
-    public function testIsMultiBlock($type, $isMultiBlock)
+    public function testIsMultiBlock(string $type, bool $isMultiBlock): void
     {
-            $this->assertSame(
-                $isMultiBlock,
-                Type::isMultiBlock($type)
-            );
+        $this->assertSame(
+            $isMultiBlock,
+            Type::isMultiBlock($type)
+        );
     }
 
-    public function isMultiBlockTypeDataProvider()
+    public function isMultiBlockTypeDataProvider(): array
     {
         $data = [];
 
-        foreach($this->typeMap as $typeMap) {
+        foreach ($this->typeMap as $typeMap) {
             $data["'{$typeMap['type']}' is single block"] = [$typeMap['type'], $typeMap['isMultiBlock']];
         }
 
@@ -72,7 +75,7 @@ class TypeTest extends \PHPUnit_Framework_TestCase
      * @param $type
      * @param $isSingleBlock
      */
-    public function testIsSingleBlock($type, $isSingleBlock)
+    public function testIsSingleBlock(string $type, bool $isSingleBlock): void
     {
         $this->assertSame(
             $isSingleBlock,
@@ -80,11 +83,11 @@ class TypeTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    public function isSingleBlockTypeDataProvider()
+    public function isSingleBlockTypeDataProvider(): array
     {
         $data = [];
 
-        foreach($this->typeMap as $typeMap) {
+        foreach ($this->typeMap as $typeMap) {
             $data["'{$typeMap['type']}' is single block"] = [$typeMap['type'], !$typeMap['isMultiBlock']];
         }
 

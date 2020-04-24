@@ -2,32 +2,41 @@
 
 namespace Ergnuor\SphinxConfig\Tests;
 
-use Ergnuor\SphinxConfig\Section\Reader;
-use Ergnuor\SphinxConfig\Section\Reader\Adapter as ReaderAdapter;
-use Ergnuor\SphinxConfig\Section\Type as SectionType;
+use PHPUnit\Framework\MockObject\MockObject;
+use Ergnuor\SphinxConfig\Section\{
+    Reader,
+    Reader\Adapter as ReaderAdapter,
+    Type as SectionType
+};
 
 /**
  * @uses \Ergnuor\SphinxConfig\Section\Type
- * @uses \Ergnuor\SphinxConfig\Section\Reader\Adapter
  * @uses \Ergnuor\SphinxConfig\Section
  */
 class ReaderTest extends SectionCase
 {
+    /**
+     * @var MockObject|ReaderAdapter
+     */
     private $adapter;
+
+    /**
+     * @var Reader
+     */
     private $reader;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->adapter = $this->getReaderAdapterMock();
         $this->reader = new Reader($this->adapter);
     }
 
-    private function getReaderAdapterMock()
+    private function getReaderAdapterMock(): MockObject
     {
         return $this->getMockForAbstractClass(ReaderAdapter::class);
     }
 
-    public function testReadConfigBlocksMergedWithAndOverrideReadConfig()
+    public function testReadConfigBlocksMergedWithAndOverrideReadConfig(): void
     {
         $this->setUpConfigEnvironment('whatever', 'configName', SectionType::SOURCE);
 
@@ -52,7 +61,7 @@ class ReaderTest extends SectionCase
         );
     }
 
-    private function setUpReadConfigAdapterMethod($returnValue)
+    private function setUpReadConfigAdapterMethod(array $returnValue): void
     {
         $this->adapter->expects($this->once())
             ->method('readConfig')
@@ -60,7 +69,7 @@ class ReaderTest extends SectionCase
             ->willReturn($returnValue);
     }
 
-    private function setUpReadConfigBlocksAdapterMethod($returnValue)
+    private function setUpReadConfigBlocksAdapterMethod(array $returnValue)
     {
         $this->adapter->expects($this->once())
             ->method('readConfigBlocks')
@@ -68,7 +77,7 @@ class ReaderTest extends SectionCase
             ->willReturn($returnValue);
     }
 
-    private function readConfig()
+    private function readConfig(): array
     {
         return $this->reader->readConfig(
             $this->configNameToRead,
@@ -76,12 +85,12 @@ class ReaderTest extends SectionCase
         );
     }
 
-    public function testReadCurrentConfigSingleBlockTransformationsApplied()
+    public function testReadCurrentConfigSingleBlockTransformationsApplied(): void
     {
         $this->readCurrentConfigSingleBlockTransformations(['param' => 'value',]);
     }
 
-    public function readCurrentConfigSingleBlockTransformations($readConfigData)
+    public function readCurrentConfigSingleBlockTransformations(array $readConfigData): void
     {
         $this->setUpConfigEnvironment('currentConfig', 'currentConfig', SectionType::SEARCHD);
 
@@ -103,12 +112,12 @@ class ReaderTest extends SectionCase
         );
     }
 
-    public function testReadCurrentConfigSingleBlockTransformationsNotAppliedBecauseBlockExists()
+    public function testReadCurrentConfigSingleBlockTransformationsNotAppliedBecauseBlockExists(): void
     {
         $this->readCurrentConfigSingleBlockTransformations([SectionType::SEARCHD => ['param' => 'value',]]);
     }
 
-    public function testReadExternalConfigSingleBlockTransformationsApplied()
+    public function testReadExternalConfigSingleBlockTransformationsApplied(): void
     {
         $this->setUpConfigEnvironment('currentConfig', 'externalConfig', SectionType::SEARCHD);
 

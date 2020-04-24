@@ -10,7 +10,7 @@ use Ergnuor\SphinxConfig\Section\Reader\Adapter\File\PhpArray as PhpArrayAdapter
  */
 class ReaderAdapterPhpArrayTest extends SectionCase
 {
-    public function testReadsConfig()
+    public function testReadsConfig(): void
     {
         $this->setUpConfigEnvironment('whatever', 'config', 'section1');
 

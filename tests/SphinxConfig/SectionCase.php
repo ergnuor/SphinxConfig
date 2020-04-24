@@ -2,28 +2,48 @@
 
 namespace Ergnuor\SphinxConfig\Tests;
 
-use Ergnuor\SphinxConfig\Section;
-use Ergnuor\SphinxConfig\Section\Reader\Adapter as ReaderAdapter;
-use Ergnuor\SphinxConfig\Section\Writer\Adapter as WriterAdapter;
+use PHPUnit\Framework\MockObject\MockObject;
+use Ergnuor\SphinxConfig\{
+    Section,
+    Section\Reader\Adapter as ReaderAdapter,
+    Section\Writer\Adapter as WriterAdapter
+};
+
 
 class SectionCase extends TestCase
 {
+    /**
+     * @var string
+     */
     protected $currentConfigName;
+
+    /**
+     * @var string
+     */
     protected $configNameToRead;
+
+    /**
+     * @var string
+     */
     protected $sectionName;
+
+    /**
+     * @var Section
+     */
     protected $sectionParameterObject;
+
     /**
      * @var Section
      */
     protected $section;
 
     /**
-     * @var \Ergnuor\SphinxConfig\Section\Reader\Adapter
+     * @var MockObject|ReaderAdapter
      */
     protected $readerAdapter;
 
     /**
-     * @var \Ergnuor\SphinxConfig\Section\Writer\Adapter
+     * @var MockObject|WriterAdapter
      */
     protected $writerAdapter;
 
@@ -31,7 +51,7 @@ class SectionCase extends TestCase
         $currentConfigName,
         $configNameToRead,
         $sectionName
-    )
+    ): void
     {
         $this->setCurrentConfigName($currentConfigName);
         $this->setConfigNameToRead($configNameToRead);
@@ -39,22 +59,22 @@ class SectionCase extends TestCase
         $this->setUpSectionParameterObject();
     }
 
-    protected function setCurrentConfigName($name)
+    protected function setCurrentConfigName(string $name): void
     {
         $this->currentConfigName = $name;
     }
 
-    protected function setConfigNameToRead($name)
+    protected function setConfigNameToRead(string $name): void
     {
         $this->configNameToRead = $name;
     }
 
-    protected function setSectionName($name)
+    protected function setSectionName(string $name): void
     {
         $this->sectionName = $name;
     }
 
-    protected function setUpSectionParameterObject()
+    protected function setUpSectionParameterObject(): void
     {
         $this->sectionParameterObject = $this->getSectionParameterObject(
             $this->currentConfigName,
@@ -62,7 +82,7 @@ class SectionCase extends TestCase
         );
     }
 
-    protected function getSectionParameterObject($configName, $sectionName)
+    protected function getSectionParameterObject(string $configName, string $sectionName): Section
     {
         return new Section(
             $configName,
@@ -73,19 +93,19 @@ class SectionCase extends TestCase
         );
     }
 
-    protected function setConfigName($name)
+    protected function setConfigName(string $name): void
     {
         $this->setCurrentConfigName($name);
         $this->setConfigNameToRead($name);
     }
 
-    protected function initSectionAndTransformConfig($placeholders)
+    protected function initSectionAndTransformConfig(array $placeholders): void
     {
         $this->initSection($placeholders);
         $this->section->transform();
     }
 
-    protected function initSection($placeholders)
+    protected function initSection(array $placeholders): void
     {
         $this->section = new Section(
             SectionTest::CURRENT_CONFIG_NAME,
@@ -97,7 +117,7 @@ class SectionCase extends TestCase
     }
 
 
-    protected function setReaderAdapterData($data)
+    protected function setReaderAdapterData(array $data): void
     {
         $this->readerAdapter->setSourceData($data);
     }

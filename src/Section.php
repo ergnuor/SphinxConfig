@@ -2,8 +2,12 @@
 
 namespace Ergnuor\SphinxConfig;
 
+use Ergnuor\SphinxConfig\Exception\SectionException;
 
-use \Ergnuor\SphinxConfig\Exception\SectionException;
+use Ergnuor\SphinxConfig\Section\{
+    Reader\Adapter as ReaderAdapter,
+    Writer\Adapter as WriterAdapter
+};
 
 class Section
 {
@@ -15,8 +19,6 @@ class Section
     private $configs = [];
 
     /**
-     * Contains current config name
-     *
      * @var string
      */
     private $configName;
@@ -101,53 +103,47 @@ class Section
      */
     private $writer;
 
-    /**
-     * @param string $configName
-     * @param string $sectionName
-     * @param Section\Reader\Adapter $readerAdapter
-     * @param Section\Writer\Adapter $writerAdapter
-     * @param array $globalPlaceholderValues
-     */
     public function __construct(
-        $configName,
-        $sectionName,
-        Section\Reader\Adapter $readerAdapter,
-        Section\Writer\Adapter $writerAdapter,
+        string $configName,
+        string $sectionName,
+        ReaderAdapter $readerAdapter,
+        WriterAdapter $writerAdapter,
         array $globalPlaceholderValues
     )
     {
-        $this->configName = (string)$configName;
-        $this->sectionName = (string)$sectionName;
+        $this->configName = $configName;
+        $this->sectionName = $sectionName;
         $this->globalPlaceholderValues = $globalPlaceholderValues;
 
         $this->createEndpoints($readerAdapter, $writerAdapter);
     }
 
     private function createEndpoints(
-        Section\Reader\Adapter $readerAdapter,
-        Section\Writer\Adapter $writerAdapter
+        ReaderAdapter $readerAdapter,
+        WriterAdapter $writerAdapter
     )
     {
         $this->reader = new Section\Reader($readerAdapter);
         $this->writer = new Section\Writer($writerAdapter);
     }
 
-    public function getConfigName()
+    public function getConfigName(): string
     {
         return $this->configName;
     }
 
-    public function transform()
+    /**
+     * @throws Exception\WriterException
+     * @throws SectionException
+     */
+    public function transform(): void
     {
         $this->readConfig($this->configName);
         $this->assemble();
         $this->writer->write($this->getConfig(), $this);
     }
 
-    /**
-     * @param string $configName
-     */
-    private function readConfig($configName)
+    private function readConfig(string $configName): void
     {
         $this->configs[$configName] = $this->reader->readConfig($configName, $this);
 
@@ -155,10 +151,7 @@ class Section
         $this->readExternalConfigs($configName);
     }
 
-    /**
-     * @param string $configName
-     */
-    private function normalizeConfig($configName)
+    private function normalizeConfig(string $configName): void
     {
         foreach ($this->configs[$configName] as $blockName => $blockConfig) {
             $blockConfig = (array)$blockConfig;
@@ -190,14 +183,13 @@ class Section
             $blockConfig['fullBlockName'] = $configName . '@' . $blockName;
             $blockConfig['isPseudo'] = (bool)(array_key_exists('isPseudo', $blockConfig) ?
                 $blockConfig['isPseudo'] : false);
-            $blockConfig['placeholderValues'] = isset($blockConfig['placeholderValues']) ?
-                (array)$blockConfig['placeholderValues'] : [];
+            $blockConfig['placeholderValues'] = (array)($blockConfig['placeholderValues'] ?? []);
 
             $this->configs[$configName][$blockName] = $this->normalizeSphinxConfig($blockConfig);
         }
     }
 
-    private function removeCustomParams($blockConfig)
+    private function removeCustomParams(array $blockConfig): array
     {
         return array_filter(
             $blockConfig,
@@ -208,19 +200,12 @@ class Section
         );
     }
 
-    /**
-     * @return array
-     */
-    private function getSystemParamsList()
+    private function getSystemParamsList(): array
     {
         return $this->systemParamsList;
     }
 
-    /**
-     * @param array $blockConfig
-     * @return array
-     */
-    private function normalizeSphinxConfig($blockConfig)
+    private function normalizeSphinxConfig(array $blockConfig): array
     {
         $blockConfig['paramModifier'] = [];
         $normalizedConfig = [];
@@ -246,24 +231,19 @@ class Section
 
     /**
      * Returns the name of the parameter and its modifier
-     *
      * @param string $paramName
      * @return array
      */
-    private function parseParamName($paramName)
+    private function parseParamName(string $paramName): array
     {
         $paramNameParts = explode(':', $paramName);
         return [
             $paramNameParts[0],
-            isset($paramNameParts[1]) ? $paramNameParts[1] : null,
+            $paramNameParts[1] ?? null,
         ];
     }
 
-    /**
-     * @param string $paramName
-     * @return bool
-     */
-    private function isMultiValueParam($paramName)
+    private function isMultiValueParam(string $paramName): bool
     {
         return in_array(
             $paramName,
@@ -271,10 +251,7 @@ class Section
         );
     }
 
-    /**
-     * @param string $configName
-     */
-    private function readExternalConfigs($configName)
+    private function readExternalConfigs(string $configName): void
     {
         $externalConfigs = $this->getExternalConfigNames($configName);
 
@@ -285,11 +262,7 @@ class Section
         }
     }
 
-    /**
-     * @param string $configName
-     * @return array
-     */
-    private function getExternalConfigNames($configName)
+    private function getExternalConfigNames(string $configName): array
     {
         return array_unique(
             array_column(
@@ -301,16 +274,18 @@ class Section
 
     /**
      * Returns a list of blocks that inherit from external config
-     *
      * @param string $configName
      * @return array
      */
-    private function getExternalInheritanceBlocks($configName)
+    private function getExternalInheritanceBlocks(string $configName): array
     {
         return array_filter(
             $this->configs[$configName],
             function ($blockConfig) {
-                return isset($blockConfig['extendsConfig']) && $blockConfig['extendsConfig'] != $this->configName;
+                return (
+                    isset($blockConfig['extendsConfig']) &&
+                    $blockConfig['extendsConfig'] != $this->configName
+                );
             }
         );
     }
@@ -318,7 +293,7 @@ class Section
     /**
      * @throws SectionException
      */
-    private function assemble()
+    private function assemble(): void
     {
         $this->pullExternalBlocks();
         $this->sortByInheritanceLevel();
@@ -330,7 +305,7 @@ class Section
     /**
      * @throws SectionException
      */
-    private function pullExternalBlocks()
+    private function pullExternalBlocks(): void
     {
         $externalInheritanceBlocks = $this->getExternalInheritanceBlocks($this->configName);
 
@@ -344,8 +319,7 @@ class Section
                 $extendsConfig = $currentBlockConfig['extendsConfig'];
                 $extends = $currentBlockConfig['extends'];
 
-                $pulledBlockConfig = isset($this->configs[$extendsConfig][$extends]) ?
-                    $this->configs[$extendsConfig][$extends] : null;
+                $pulledBlockConfig = $this->configs[$extendsConfig][$extends] ?? null;
 
                 if (!isset($pulledBlockConfig)) {
                     $supposedFullBlockName = "{$extendsConfig}@{$extends}";
@@ -390,14 +364,14 @@ class Section
     /**
      * @param string $message
      * @param array $blocksInheritanceStack
-     * @param null|string $supposedFullBlockName
+     * @param string|null $supposedFullBlockName
      * @throws SectionException
      */
     private function throwPullExternalBlocksException(
-        $message,
-        $blocksInheritanceStack,
-        $supposedFullBlockName = null
-    )
+        string $message,
+        array $blocksInheritanceStack,
+        string $supposedFullBlockName = null
+    ): void
     {
 
         if (!is_null($supposedFullBlockName)) {
@@ -412,7 +386,7 @@ class Section
      * @param string $message
      * @throws SectionException
      */
-    private function throwSectionException($message)
+    private function throwSectionException(string $message): void
     {
         throw new SectionException("An error occurred in '{$this->sectionName}' section. {$message}");
     }
@@ -420,7 +394,7 @@ class Section
     /**
      * @throws SectionException
      */
-    private function sortByInheritanceLevel()
+    private function sortByInheritanceLevel(): void
     {
         foreach ($this->configs[$this->configName] as $blockName => $blockConfig) {
             if (isset($this->configs[$this->configName][$blockName]['inheritanceLevel'])) {
@@ -450,7 +424,7 @@ class Section
      * @return array
      * @throws SectionException
      */
-    private function getBlocksInInheritanceOrder($blockConfig)
+    private function getBlocksInInheritanceOrder(array $blockConfig): array
     {
         $inheritancePath = [$blockConfig['name']];
         $parentBlocks = $this->getParentBlocks($blockConfig);
@@ -467,7 +441,7 @@ class Section
      * @return array
      * @throws SectionException
      */
-    private function getParentBlocks($blockConfig)
+    private function getParentBlocks(array $blockConfig): array
     {
         $parentBlocks = [];
         while (isset($blockConfig['extends'])) {
@@ -484,10 +458,7 @@ class Section
         return $parentBlocks;
     }
 
-    /**
-     * @param array $inheritancePath
-     */
-    private function setInheritanceLevel($inheritancePath)
+    private function setInheritanceLevel(array $inheritancePath): void
     {
         $inheritanceLevel = 1;
         $blockName = array_pop($inheritancePath);
@@ -500,7 +471,7 @@ class Section
     /**
      * @throws SectionException
      */
-    private function processInheritance()
+    private function processInheritance(): void
     {
         foreach ($this->configs[$this->configName] as $blockName => $blockConfig) {
             $blockConfig = $this->processMultiValueParamsInheritance($blockConfig);
@@ -516,11 +487,10 @@ class Section
      * @return array
      * @throws SectionException
      */
-    private function processMultiValueParamsInheritance($blockConfig)
+    private function processMultiValueParamsInheritance(array $blockConfig): array
     {
         foreach ($blockConfig['config'] as $paramName => $paramValue) {
-            $paramModifier = isset($blockConfig['paramModifier'][$paramName]) ?
-                $blockConfig['paramModifier'][$paramName] : null;
+            $paramModifier = $blockConfig['paramModifier'][$paramName] ?? null;
 
             if (
                 !$this->isMultiValueParam($paramName) ||
@@ -529,12 +499,12 @@ class Section
                 continue;
             }
 
-            $parentParamValue = $this->getClosestParentParamValue($paramName, $blockConfig);
+            $parentBlockConfig = $this->getClosestParentBlockConfigContainsParam($paramName, $blockConfig);
 
-            if (!is_null($parentParamValue)) {
+            if (!is_null($parentBlockConfig)) {
                 $blockConfig['config'][$paramName] = $this->mergeMultiValueParamValues(
                     $paramValue,
-                    $parentParamValue
+                    (array)$parentBlockConfig[$paramName]
                 );
             }
         }
@@ -544,28 +514,23 @@ class Section
     /**
      * @param string $paramName
      * @param array $blockConfig
-     * @return null|string|array
+     * @return array|null
      * @throws SectionException
      */
-    private function getClosestParentParamValue($paramName, $blockConfig)
+    private function getClosestParentBlockConfigContainsParam(string $paramName, array $blockConfig): ?array
     {
         $parentBlocks = $this->getParentBlocks($blockConfig);
 
         foreach ($parentBlocks as $parentBlockConfig) {
             if (isset($parentBlockConfig['config'][$paramName])) {
-                return $parentBlockConfig['config'][$paramName];
+                return $parentBlockConfig['config'];
             }
         }
 
         return null;
     }
 
-    /**
-     * @param array $paramValue
-     * @param array $parentParamValue
-     * @return array
-     */
-    private function mergeMultiValueParamValues($paramValue, $parentParamValue)
+    private function mergeMultiValueParamValues(array $paramValue, array $parentParamValue): array
     {
         $namedValues = array_filter(
             $paramValue,
@@ -594,7 +559,7 @@ class Section
      * @return array
      * @throws SectionException
      */
-    private function processPseudoBlockInheritance($blockConfig)
+    private function processPseudoBlockInheritance(array $blockConfig): array
     {
         $parentBlockConfig = $this->getParentBlock($blockConfig);
 
@@ -615,7 +580,7 @@ class Section
      * @return array|null
      * @throws SectionException
      */
-    private function getParentBlock($blockConfig)
+    private function getParentBlock(array $blockConfig): ?array
     {
         $parentBlocks = $this->getParentBlocks($blockConfig);
 
@@ -627,11 +592,11 @@ class Section
     }
 
     /**
-     * @param $blockConfig
-     * @return mixed
+     * @param array $blockConfig
+     * @return array
      * @throws SectionException
      */
-    private function propagatePlaceholderValues($blockConfig)
+    private function propagatePlaceholderValues(array $blockConfig): array
     {
         $parentBlockConfig = $this->getParentBlock($blockConfig);
 
@@ -648,7 +613,7 @@ class Section
     /**
      * @throws SectionException
      */
-    private function processParamsValues()
+    private function processParamsValues(): void
     {
         foreach ($this->configs[$this->configName] as $blockName => $blockConfig) {
             foreach ($blockConfig['config'] as $paramName => $paramValue) {
@@ -673,14 +638,17 @@ class Section
     }
 
     /**
-     * @param $currentValue
-     * @param $blockConfig
+     * @param string $currentValue
+     * @param array $blockConfig
      * @param array $processedPlaceholders
-     * @return mixed
+     * @return string
      * @throws SectionException
      */
-
-    private function applyPlaceholdersValues($currentValue, $blockConfig, $processedPlaceholders = [])
+    private function applyPlaceholdersValues(
+        string $currentValue,
+        array $blockConfig,
+        array $processedPlaceholders = []
+    ): string
     {
         $placeholders = $this->parsePlaceholders($currentValue);
 
@@ -715,11 +683,7 @@ class Section
         return $this->applyPlaceholdersValues($currentValue, $blockConfig, $processedPlaceholders);
     }
 
-    /**
-     * @param string $value
-     * @return array
-     */
-    private function parsePlaceholders($value)
+    private function parsePlaceholders(string $value): array
     {
         preg_match_all('/::(?:.+?)(?=::)::/', $value, $m);
 
@@ -731,9 +695,9 @@ class Section
      *
      * @param array $array
      * @param string $keyPath
-     * @return null|array
+     * @return null|string|array
      */
-    private function findByPath($array, $keyPath)
+    private function findByPath(array $array, string $keyPath)
     {
         $keyPathParts = explode('.', $keyPath);
 
@@ -748,11 +712,7 @@ class Section
         return $array;
     }
 
-    /**
-     * @param string $placeholderWithBoundaries
-     * @return string
-     */
-    private function clearPlaceholderBoundaries($placeholderWithBoundaries)
+    private function clearPlaceholderBoundaries(string $placeholderWithBoundaries): string
     {
         $placeholderWithBoundaries = preg_replace('/^::/', '', $placeholderWithBoundaries);
         $placeholderWithBoundaries = preg_replace('/::$/', '', $placeholderWithBoundaries);
@@ -760,7 +720,7 @@ class Section
         return $placeholderWithBoundaries;
     }
 
-    private function processMultilineValue($value)
+    private function processMultilineValue(string $value): string
     {
         return preg_replace('/([\r\n]+)/', ' \\\$1', $value);
     }
@@ -768,7 +728,7 @@ class Section
     /**
      * @throws SectionException
      */
-    private function filterPseudoBlocks()
+    private function filterPseudoBlocks(): void
     {
         $realBlocks = array_filter(
             $this->configs[$this->configName],
@@ -797,12 +757,11 @@ class Section
 
     /**
      * Returns the closest parent block for the specified block that is not a pseudo block
-     *
      * @param array $blockConfig
-     * @return null|string
+     * @return string|null
      * @throws SectionException
      */
-    private function getClosestParentRealBlockName($blockConfig)
+    private function getClosestParentRealBlockName(array $blockConfig): ?string
     {
         $parentBlocks = $this->getParentBlocks($blockConfig);
 
@@ -815,10 +774,7 @@ class Section
         return null;
     }
 
-    /**
-     * @return array
-     */
-    private function getConfig()
+    private function getConfig(): array
     {
         $cleanConfig = [];
         foreach ($this->configs[$this->configName] as $blockName => $blockConfig) {
@@ -828,11 +784,7 @@ class Section
         return $cleanConfig;
     }
 
-    /**
-     * @param array $blockConfig
-     * @return array
-     */
-    private function removeSystemParameters($blockConfig)
+    private function removeSystemParameters(array $blockConfig): array
     {
         return array_intersect_key(
             $blockConfig,
@@ -845,10 +797,7 @@ class Section
         );
     }
 
-    /**
-     * @return null|string
-     */
-    public function getName()
+    public function getName(): string
     {
         return $this->sectionName;
     }

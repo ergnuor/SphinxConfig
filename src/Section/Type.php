@@ -10,7 +10,7 @@ class Type
     const SEARCHD = 'searchd';
     const COMMON = 'common';
 
-    public static function getTypes()
+    public static function getTypes(): array
     {
         return [
             self::SOURCE,
@@ -21,7 +21,7 @@ class Type
         ];
     }
 
-    public static function isMultiBlock($sectionType)
+    public static function isMultiBlock(string $sectionType): bool
     {
         return in_array(
             $sectionType,
@@ -32,7 +32,7 @@ class Type
         );
     }
 
-    public static function isSingleBlock($sectionType)
+    public static function isSingleBlock(string $sectionType): bool
     {
         return in_array(
             $sectionType,

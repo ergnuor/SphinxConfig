@@ -2,37 +2,44 @@
 
 namespace Ergnuor\SphinxConfig\Tests;
 
-use Ergnuor\SphinxConfig\Exception\ReaderException;
-use Ergnuor\SphinxConfig\Section\Reader\Adapter\File as ReaderAdapterFile;
+use Ergnuor\SphinxConfig\{
+    Exception\ReaderException,
+    Section\Reader\Adapter\File as ReaderAdapterFile
+};
+use PHPUnit\Framework\MockObject\Builder\InvocationMocker;
+use PHPUnit\Framework\MockObject\MockObject;
 
 /**
  * @uses \Ergnuor\SphinxConfig\Section
  */
 class ReaderAdapterFileTest extends SectionCase
 {
+    /**
+     * @var MockObject|ReaderAdapterFile
+     */
     private $adapter;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->adapter = $this->getAdapterMock(
             $this->getAdapterFileRootPath() . DIRECTORY_SEPARATOR
         );
     }
 
-    private function getAdapterMock($srcPath)
+    private function getAdapterMock(string $srcPath): MockObject
     {
         return $this->getMockBuilder(ReaderAdapterFile::class)
-            ->setMethods(['readFile'])
+            ->onlyMethods(['readFile'])
             ->setConstructorArgs([$srcPath])
             ->getMock();
     }
 
-    private function getAdapterFileRootPath()
+    private function getAdapterFileRootPath(): string
     {
         return FileSystem::getReaderAdapterRootPath() . 'file' . DIRECTORY_SEPARATOR;
     }
 
-    public function testReadSectionConfigBlocksButNoSectionBlocksDirectoryExists()
+    public function testReadSectionConfigBlocksButNoSectionBlocksDirectoryExists(): void
     {
         $this->setUpConfigEnvironment('whatever', 'separateSectionBlocksNotExists', 'nonexistentSectionDirectory');
 
@@ -48,16 +55,16 @@ class ReaderAdapterFileTest extends SectionCase
 
     /**
      * @param $numberOfCalls
-     * @return \PHPUnit_Framework_MockObject_Builder_InvocationMocker
+     * @return InvocationMocker
      */
-    private function adapterExpectations($numberOfCalls)
+    private function adapterExpectations(int $numberOfCalls)
     {
         return $this->adapter
             ->expects($this->exactly($numberOfCalls))
             ->method('readFile');
     }
 
-    private function readConfigBlocks()
+    private function readConfigBlocks(): array
     {
         return $this->adapter->readConfigBlocks(
             $this->configNameToRead,
@@ -65,7 +72,7 @@ class ReaderAdapterFileTest extends SectionCase
         );
     }
 
-    public function testReadSectionConfigBlocksButNoBlocksExists()
+    public function testReadSectionConfigBlocksButNoBlocksExists(): void
     {
         $this->setUpConfigEnvironment('whatever', 'separateSectionBlocksNotExists', 'sectionName');
 
@@ -79,12 +86,12 @@ class ReaderAdapterFileTest extends SectionCase
         );
     }
 
-    public function testReadSectionConfigBlocksMixedWithDirectory()
+    public function testReadSectionConfigBlocksMixedWithDirectory(): void
     {
         $this->setUpConfigEnvironment('whatever', 'separateSectionBlocksMixedWithDirectory', 'sectionName');
 
         $configRootPath = $this->getAdapterFileRootPath() . $this->configNameToRead;
-        $returnedBlockContent = 'blockContent';
+        $returnedBlockContent = ['blockContent'];
 
         $this->adapterExpectations(2)
             ->withConsecutive(
@@ -104,7 +111,7 @@ class ReaderAdapterFileTest extends SectionCase
         );
     }
 
-    public function testReadSectionConfigFromMultiSectionAndSingleSectionFiles()
+    public function testReadSectionConfigFromMultiSectionAndSingleSectionFiles(): void
     {
         $this->setUpConfigEnvironment('whatever', 'sectionInMultiSectionAndSingleSectionFiles', 'sectionName');
 
@@ -139,7 +146,7 @@ class ReaderAdapterFileTest extends SectionCase
         );
     }
 
-    private function readConfig()
+    private function readConfig(): array
     {
         return $this->adapter->readConfig(
             $this->configNameToRead,
@@ -147,7 +154,7 @@ class ReaderAdapterFileTest extends SectionCase
         );
     }
 
-    public function testReadSectionConfigWithMultiSectionFileCached()
+    public function testReadSectionConfigWithMultiSectionFileCached(): void
     {
         $this->setUpConfigEnvironment('whatever', 'sectionInMultiSectionAndSingleSectionFiles', 'sectionName');
 
@@ -158,7 +165,7 @@ class ReaderAdapterFileTest extends SectionCase
         $this->readConfig();
     }
 
-    public function testReadSectionConfigWithMultiSectionFileCacheCleared()
+    public function testReadSectionConfigWithMultiSectionFileCacheCleared(): void
     {
         $this->setUpConfigEnvironment('whatever', 'sectionInMultiSectionAndSingleSectionFiles', 'sectionName');
 
@@ -172,7 +179,7 @@ class ReaderAdapterFileTest extends SectionCase
         $this->readConfig();
     }
 
-    public function testReadSectionConfigFromMultiSectionAndSingleSectionFilesButNotExists()
+    public function testReadSectionConfigFromMultiSectionAndSingleSectionFilesButNotExists(): void
     {
         $this->setUpConfigEnvironment('whatever', 'sectionInMultiSectionAndSingleSectionFilesNotExists', 'sectionName');
 
@@ -186,7 +193,7 @@ class ReaderAdapterFileTest extends SectionCase
         );
     }
 
-    public function testUnknownDirectoryException()
+    public function testUnknownDirectoryException(): void
     {
         $this->expectException(ReaderException::class);
         $this->expectExceptionMessage("'' is not a directory");

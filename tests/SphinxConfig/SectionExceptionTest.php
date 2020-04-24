@@ -2,12 +2,18 @@
 
 namespace Ergnuor\SphinxConfig\Tests;
 
-use Ergnuor\SphinxConfig\Section;
-use Ergnuor\SphinxConfig\Section\Type as SectionType;
-use Ergnuor\SphinxConfig\Tests\Fake\InMemoryWriterAdapter;
-use Ergnuor\SphinxConfig\Tests\Stub\ReaderAdapter;
-use Ergnuor\SphinxConfig\Exception\SectionException;
+use Ergnuor\SphinxConfig\{
+    Section\Type as SectionType,
+    Tests\Fake\InMemoryWriterAdapter,
+    Tests\Stub\ReaderAdapter,
+    Exception\SectionException
+};
 
+/**
+ * @uses \Ergnuor\SphinxConfig\Section\Reader
+ * @uses \Ergnuor\SphinxConfig\Section\Writer
+ * @uses \Ergnuor\SphinxConfig\Section\Type
+ */
 class SectionExceptionTest extends SectionCase
 {
     /**
@@ -15,7 +21,7 @@ class SectionExceptionTest extends SectionCase
      */
     protected $writerAdapter;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->readerAdapter = new ReaderAdapter();
         $this->writerAdapter = new InMemoryWriterAdapter();
@@ -24,7 +30,7 @@ class SectionExceptionTest extends SectionCase
         $this->setSectionName(SectionType::SOURCE);
     }
 
-    public function testUnknownExternalBlockReferenceException()
+    public function testUnknownExternalBlockReferenceException(): void
     {
         $this->setExpectedSectionException(
             "An error occurred in '{$this->sectionName}' section. Unknown external block reference (externalConfig@level1). "
@@ -42,7 +48,7 @@ class SectionExceptionTest extends SectionCase
         $this->initSectionAndTransformConfig([]);
     }
 
-    public function testCircularReferenceDetectedException()
+    public function testCircularReferenceDetectedException(): void
     {
         $this->setExpectedSectionException(
             "An error occurred in '{$this->sectionName}' section. "
@@ -67,7 +73,7 @@ class SectionExceptionTest extends SectionCase
         $this->initSectionAndTransformConfig([]);
     }
 
-    public function testNameConflictException()
+    public function testNameConflictException(): void
     {
         $this->setExpectedSectionException(
             "An error occurred in '{$this->sectionName}' section. There is a name conflict while pulling external blocks. "
@@ -91,7 +97,7 @@ class SectionExceptionTest extends SectionCase
         $this->initSectionAndTransformConfig([]);
     }
 
-    public function testCircularPlaceholdersReferenceException()
+    public function testCircularPlaceholdersReferenceException(): void
     {
         $this->setExpectedSectionException(
             "An error occurred in '{$this->sectionName}' section. Circular placeholders detected. "
@@ -118,7 +124,7 @@ class SectionExceptionTest extends SectionCase
         $this->initSectionAndTransformConfig([]);
     }
 
-    public function testUnknownParentBlockException()
+    public function testUnknownParentBlockException(): void
     {
         $this->setExpectedSectionException("An error occurred in '{$this->sectionName}' section. Unknown parent block 'unknownBlock'");
 
@@ -135,7 +141,7 @@ class SectionExceptionTest extends SectionCase
         $this->initSectionAndTransformConfig([]);
     }
 
-    private function setExpectedSectionException($msg)
+    private function setExpectedSectionException(string $msg): void
     {
         $this->expectException(SectionException::class);
         $this->expectExceptionMessage($msg);

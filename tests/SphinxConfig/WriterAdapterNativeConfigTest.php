@@ -2,12 +2,21 @@
 
 namespace Ergnuor\SphinxConfig\Tests;
 
-use Ergnuor\SphinxConfig\Exception\WriterException;
-use Ergnuor\SphinxConfig\Section\Writer\Adapter\NativeConfig;
+use Ergnuor\SphinxConfig\{
+    Exception\WriterException,
+    Section\Writer\Adapter\NativeConfig
+};
 
 class WriterAdapterNativeConfigTest extends SectionCase
 {
+    /**
+     * @var string
+     */
     private $expectedFilePath;
+
+    /**
+     * @var string
+     */
     private $actualFilePath;
 
     /**
@@ -15,21 +24,21 @@ class WriterAdapterNativeConfigTest extends SectionCase
      */
     private $adapter;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->setCurrentConfigName('writerAdapterNativeConfig');
         $this->expectedFilePath = FileSystem::getWriterAdapterExpectedPath() . $this->currentConfigName . '.conf';
         $this->actualFilePath = FileSystem::getWriterAdapterActualPath() . $this->currentConfigName . '.conf';
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         if (file_exists($this->actualFilePath)) {
             unlink($this->actualFilePath);
         }
     }
 
-    public function testDestinationDirectoryIsNotDirectoryException()
+    public function testDestinationDirectoryIsNotDirectoryException(): void
     {
         $dstPath = FileSystem::getWriterAdapterRootPath() . 'unknownDirectory';
         $this->expectException(WriterException::class);
@@ -40,12 +49,12 @@ class WriterAdapterNativeConfigTest extends SectionCase
         $this->writeSections();
     }
 
-    private function setUpAdapter($dstPath = null)
+    private function setUpAdapter(string $dstPath = null): void
     {
         $this->adapter = new NativeConfig($dstPath);
     }
 
-    protected function writeSections()
+    protected function writeSections(): void
     {
         $this->adapter->startSingleBlockSection('singleBlockSection');
         $this->adapter->writeParam('singleBlockSection_param1', 'singleBlockSection_value1');
@@ -65,7 +74,7 @@ class WriterAdapterNativeConfigTest extends SectionCase
         $this->adapter->write($this->currentConfigName);
     }
 
-    public function testWrite()
+    public function testWrite(): void
     {
         $this->setUpAdapter(FileSystem::getWriterAdapterActualPath());
 
@@ -77,12 +86,12 @@ class WriterAdapterNativeConfigTest extends SectionCase
         );
     }
 
-    public function testStartMultiBlockSection()
+    public function testStartMultiBlockSection(): void
     {
         $this->startMultiBlockSectionTest();
     }
 
-    private function startMultiBlockSectionTest($extends = null)
+    private function startMultiBlockSectionTest(string $extends = null): void
     {
         $this->setUpAdapter();
         $this->setSectionName('sectionName');
@@ -96,7 +105,7 @@ class WriterAdapterNativeConfigTest extends SectionCase
         );
     }
 
-    private function getFullMultiBlockSectionName($blockName, $extends = null)
+    private function getFullMultiBlockSectionName(string $blockName, string $extends = null): string
     {
         $fullBlockName = "{$this->sectionName} {$blockName}";
         if (isset($extends)) {
@@ -106,17 +115,17 @@ class WriterAdapterNativeConfigTest extends SectionCase
         return "{$fullBlockName} {" . PHP_EOL;
     }
 
-    private function getAdapterBufferValue()
+    private function getAdapterBufferValue(): string
     {
         return $this->getValueOfInaccessibleProperty($this->adapter, 'buffer');
     }
 
-    public function testStartMultiBlockSectionWithExtension()
+    public function testStartMultiBlockSectionWithExtension(): void
     {
         $this->startMultiBlockSectionTest('extendedSectionName');
     }
 
-    public function testEndMultiBlockSection()
+    public function testEndMultiBlockSection(): void
     {
         $this->setUpAdapter();
 
@@ -128,12 +137,12 @@ class WriterAdapterNativeConfigTest extends SectionCase
         );
     }
 
-    private function getSectionEnd()
+    private function getSectionEnd(): string
     {
         return "}" . PHP_EOL . PHP_EOL;
     }
 
-    public function testStartSingleBlockSection()
+    public function testStartSingleBlockSection(): void
     {
         $this->setUpAdapter();
         $this->setSectionName('sectionName');
@@ -146,7 +155,7 @@ class WriterAdapterNativeConfigTest extends SectionCase
         );
     }
 
-    public function testEndSingleBlockSection()
+    public function testEndSingleBlockSection(): void
     {
         $this->setUpAdapter();
 
@@ -158,7 +167,7 @@ class WriterAdapterNativeConfigTest extends SectionCase
         );
     }
 
-    public function testWriteParam()
+    public function testWriteParam(): void
     {
         $this->setUpAdapter();
         $paramName = 'paramName';
@@ -172,7 +181,7 @@ class WriterAdapterNativeConfigTest extends SectionCase
         );
     }
 
-    public function testReset()
+    public function testReset(): void
     {
         $this->setUpAdapter();
         $paramName = 'paramName';

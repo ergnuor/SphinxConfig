@@ -2,21 +2,20 @@
 
 namespace Ergnuor\SphinxConfig\Section;
 
-
-use Ergnuor\SphinxConfig\Exception\WriterException;
-use Ergnuor\SphinxConfig\Section;
+use Ergnuor\SphinxConfig\{
+    Exception\WriterException,
+    Section,
+    Section\Writer\Adapter as WriterAdapter
+};
 
 class Writer
 {
     /**
-     * @var Writer\Adapter|null
+     * @var WriterAdapter
      */
-    private $writerAdapter = null;
+    private $writerAdapter;
 
-    /**
-     * @param Writer\Adapter $writerAdapter
-     */
-    public function __construct(Writer\Adapter $writerAdapter)
+    public function __construct(WriterAdapter $writerAdapter)
     {
         $this->writerAdapter = $writerAdapter;
     }
@@ -26,7 +25,7 @@ class Writer
      * @param Section $section
      * @throws WriterException
      */
-    final public function write($config, Section $section)
+    final public function write(array $config, Section $section): void
     {
         $sectionName = $section->getName();
 
@@ -41,11 +40,7 @@ class Writer
         $this->writerAdapter->write($section->getConfigName());
     }
 
-    /**
-     * @param array $config
-     * @param Section $section
-     */
-    private function writeSingleBlockSection($config, Section $section)
+    private function writeSingleBlockSection(array $config, Section $section): void
     {
         $sectionName = $section->getName();
 
@@ -58,33 +53,24 @@ class Writer
         $this->writerAdapter->endSingleBlockSection();
     }
 
-    private function writeParams($params)
+    private function writeParams(array $params): void
     {
         foreach ($params as $paramName => $paramValue) {
-            $this->writeParam($paramName, $paramValue);
+            $this->writeParamValues($paramName, (array)$paramValue);
         }
     }
 
-    /**
-     * @param string $paramName
-     * @param string $paramValue
-     */
-    private function writeParam($paramName, $paramValue)
+    private function writeParamValues(string $paramName, array $paramValue): void
     {
-        $paramValue = (array)$paramValue;
         foreach ($paramValue as $curParamValue) {
             $this->writerAdapter->writeParam($paramName, $curParamValue);
         }
     }
 
-    /**
-     * @param array $config
-     * @param Section $section
-     */
-    private function writeMultiBlockSection($config, Section $section)
+    private function writeMultiBlockSection(array $config, Section $section): void
     {
         foreach ($config as $blockName => $blockConfig) {
-            $extends = isset($blockConfig['extends']) ? $blockConfig['extends'] : null;
+            $extends = $blockConfig['extends'] ?? null;
 
             $this->writerAdapter->startMultiBlockSection($section->getName(), $blockName, $extends);
             $this->writeParams($blockConfig['config']);

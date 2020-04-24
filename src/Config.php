@@ -2,6 +2,15 @@
 
 namespace Ergnuor\SphinxConfig;
 
+use Ergnuor\SphinxConfig\Section\Reader\{
+    Adapter as ReaderAdapter,
+    Adapter\File\PhpArray as PhpArrayReaderAdapter
+};
+use Ergnuor\SphinxConfig\Section\Writer\{
+    Adapter as WriterAdapter,
+    Adapter\NativeConfig as NativeConfigWriterAdapter
+};
+
 class Config
 {
     /**
@@ -10,49 +19,58 @@ class Config
     private $placeholderValues = [];
 
     /**
-     * @var Section\Reader\Adapter
+     * @var ReaderAdapter
      */
     private $sectionReaderAdapter;
 
     /**
-     * @var Section\Writer\Adapter
+     * @var WriterAdapter
      */
     private $sectionWriterAdapter;
 
-    /**
-     * @param Section\Reader\Adapter $sectionReaderAdapter
-     * @param Section\Writer\Adapter $sectionWriterAdapter
-     */
     public function __construct(
-        Section\Reader\Adapter $sectionReaderAdapter,
-        Section\Writer\Adapter $sectionWriterAdapter
+        ReaderAdapter $sectionReaderAdapter,
+        WriterAdapter $sectionWriterAdapter
     )
     {
         $this->sectionReaderAdapter = $sectionReaderAdapter;
         $this->sectionWriterAdapter = $sectionWriterAdapter;
     }
 
-    public static function phpArrayToNativeConfigStdout($srcPath)
+    /**
+     * @param string $srcPath
+     * @return Config
+     * @throws Exception\ReaderException
+     */
+    public static function phpArrayToNativeConfigStdout(string $srcPath): Config
     {
         return new static(
-            new Section\Reader\Adapter\File\PhpArray($srcPath),
-            new Section\Writer\Adapter\NativeConfig()
+            new PhpArrayReaderAdapter($srcPath),
+            new NativeConfigWriterAdapter()
         );
     }
 
-    public static function phpArrayToNativeConfigFile($srcPath, $dstPath)
+    /**
+     * @param string $srcPath
+     * @param string $dstPath
+     * @return Config
+     * @throws Exception\ReaderException
+     */
+    public static function phpArrayToNativeConfigFile(string $srcPath, string $dstPath): Config
     {
         return new static(
-            new Section\Reader\Adapter\File\PhpArray($srcPath),
-            new Section\Writer\Adapter\NativeConfig($dstPath)
+            new PhpArrayReaderAdapter($srcPath),
+            new NativeConfigWriterAdapter($dstPath)
         );
     }
 
     /**
      * @param string $configName
-     * @return $this
+     * @return Config
+     * @throws Exception\WriterException
+     * @throws Exception\SectionException
      */
-    public function transform($configName)
+    public function transform(string $configName): Config
     {
         $sections = Section\Type::getTypes();
 
@@ -73,19 +91,12 @@ class Config
         return $this;
     }
 
-    /**
-     * @return array
-     */
-    public function getPlaceholderValues()
+    public function getPlaceholderValues(): array
     {
         return $this->placeholderValues;
     }
 
-    /**
-     * @param array $placeholderValues
-     * @return Config
-     */
-    public function setPlaceholderValues(array $placeholderValues)
+    public function setPlaceholderValues(array $placeholderValues): Config
     {
         $this->placeholderValues = $placeholderValues;
         return $this;

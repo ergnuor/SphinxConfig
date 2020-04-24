@@ -2,10 +2,18 @@
 
 namespace Ergnuor\SphinxConfig\Tests;
 
-use Ergnuor\SphinxConfig\Section\Type as SectionType;
-use Ergnuor\SphinxConfig\Tests\Fake\InMemoryWriterAdapter;
-use Ergnuor\SphinxConfig\Tests\Stub\ReaderAdapter;
+use Ergnuor\SphinxConfig\{
+    Section\Type as SectionType,
+    Tests\Fake\InMemoryWriterAdapter,
+    Tests\Stub\ReaderAdapter
+};
 
+
+/**
+ * @uses \Ergnuor\SphinxConfig\Section\Reader
+ * @uses \Ergnuor\SphinxConfig\Section\Writer
+ * @uses \Ergnuor\SphinxConfig\Section\Type
+ */
 class SectionTest extends SectionCase
 {
     const CURRENT_CONFIG_NAME = 'currentConfigName';
@@ -16,7 +24,7 @@ class SectionTest extends SectionCase
      */
     protected $writerAdapter;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->readerAdapter = new ReaderAdapter();
         $this->writerAdapter = new InMemoryWriterAdapter();
@@ -30,10 +38,10 @@ class SectionTest extends SectionCase
      * @param $placeholders
      */
     public function testTransformations(
-        $readerSourceData,
-        $expectedConfig,
-        $placeholders
-    )
+        array $readerSourceData,
+        array $expectedConfig,
+        array $placeholders
+    ): void
     {
         $this->setReaderAdapterData($readerSourceData);
 
@@ -42,7 +50,7 @@ class SectionTest extends SectionCase
         $this->assertSame($expectedConfig, $this->writerAdapter->getConfig());
     }
 
-    public function configTransformationsDataProvider()
+    public function configTransformationsDataProvider(): array
     {
         return [
             'extends in right order' => $this->dataExtendsInRightOrder(),
@@ -56,7 +64,7 @@ class SectionTest extends SectionCase
         ];
     }
 
-    private function dataExtendsInRightOrder()
+    private function dataExtendsInRightOrder(): array
     {
         return [
             [
@@ -79,7 +87,7 @@ class SectionTest extends SectionCase
         ];
     }
 
-    private function dataExtendsExternalConfig()
+    private function dataExtendsExternalConfig(): array
     {
         return [
             [
@@ -106,7 +114,7 @@ class SectionTest extends SectionCase
         ];
     }
 
-    private function dataExternalBlocksDidntPulledMultipleTimes()
+    private function dataExternalBlocksDidntPulledMultipleTimes(): array
     {
         return [
             [
@@ -133,7 +141,7 @@ class SectionTest extends SectionCase
         ];
     }
 
-    private function dataPseudoBlockNotAppears()
+    private function dataPseudoBlockNotAppears(): array
     {
         return [
             [
@@ -172,7 +180,7 @@ class SectionTest extends SectionCase
         ];
     }
 
-    private function dataMultiValueParameterInheritance()
+    private function dataMultiValueParameterInheritance(): array
     {
         return [
             [
@@ -238,7 +246,7 @@ class SectionTest extends SectionCase
         ];
     }
 
-    private function dataPlaceholders()
+    private function dataPlaceholders(): array
     {
         return [
             [
@@ -314,7 +322,7 @@ class SectionTest extends SectionCase
         ];
     }
 
-    private function dataCustomParamsAreRemoved()
+    private function dataCustomParamsAreRemoved(): array
     {
         return [
             [
@@ -339,7 +347,7 @@ class SectionTest extends SectionCase
         ];
     }
 
-    private function dataMultilineValueIsPaddedWithSlashes()
+    private function dataMultilineValueIsPaddedWithSlashes(): array
     {
         return [
             [
@@ -368,7 +376,7 @@ class SectionTest extends SectionCase
         ];
     }
 
-    public function testGetConfigName()
+    public function testGetConfigName(): void
     {
         $this->initSection([]);
 
@@ -378,7 +386,7 @@ class SectionTest extends SectionCase
         );
     }
 
-    public function testName()
+    public function testName(): void
     {
         $this->initSection([]);
 

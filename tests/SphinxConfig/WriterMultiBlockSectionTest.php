@@ -6,18 +6,17 @@ use Ergnuor\SphinxConfig\Section\Type as SectionType;
 
 /**
  * @uses \Ergnuor\SphinxConfig\Section\Type
- * @uses \Ergnuor\SphinxConfig\Section\Writer\Adapter
  * @uses \Ergnuor\SphinxConfig\Section
  */
 class WriterMultiBlockSectionTest extends WriterCase
 {
-    public function setUp()
+    public function setUp(): void
     {
         $this->setSectionName(SectionType::SOURCE);
         parent::setUp();
     }
 
-    public function testWriteMultiBlockSection()
+    public function testWriteMultiBlockSection(): void
     {
         $this->adapterExpectations(
             [2, 'startMultiBlockSection',
@@ -53,7 +52,7 @@ class WriterMultiBlockSectionTest extends WriterCase
         );
     }
 
-    public function testWriteMultiBlockSectionButSectionIsEmpty()
+    public function testWriteMultiBlockSectionButSectionIsEmpty(): void
     {
         $this->adapterExpectations(
             [0, 'startMultiBlockSection'],
@@ -64,7 +63,7 @@ class WriterMultiBlockSectionTest extends WriterCase
         $this->write([]);
     }
 
-    public function testWriteMultiBlockSectionButSectionBlocksConfigIsEmpty()
+    public function testWriteMultiBlockSectionButSectionBlocksConfigIsEmpty(): void
     {
         $this->adapterExpectations(
             [2, 'startMultiBlockSection',

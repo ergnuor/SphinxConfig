@@ -2,33 +2,35 @@
 
 namespace Ergnuor\SphinxConfig\Section\Reader\Adapter;
 
-use Ergnuor\SphinxConfig\Section;
-use Ergnuor\SphinxConfig\Exception\ReaderException;
-use Ergnuor\SphinxConfig\Section\Reader\Adapter;
+use Ergnuor\SphinxConfig\{
+    Section,
+    Exception\ReaderException,
+    Section\Reader\Adapter
+};
 
 abstract class File implements Adapter
 {
+    protected $extension = 'conf';
+
     /**
      * Caches previously read configs
      *
      * @var array[]
      */
     private $multiSectionConfigs = [];
-    protected $extension = 'conf';
+
     /**
-     * The path to the directory containing the configs
-     *
      * @var string
      */
-    private $configsRootPath = null;
+    private $configsRootPath;
 
     /**
      * @param string $configsRootPath
      * @throws ReaderException
      */
-    public function __construct($configsRootPath)
+    public function __construct(string $configsRootPath)
     {
-        $this->configsRootPath = trim((string)$configsRootPath);
+        $this->configsRootPath = trim($configsRootPath);
 
         if (!is_dir($this->configsRootPath)) {
             throw new ReaderException("'{$this->configsRootPath}' is not a directory");
@@ -37,7 +39,7 @@ abstract class File implements Adapter
         $this->configsRootPath = realpath($this->configsRootPath);
     }
 
-    public function readConfig($configName, Section $section)
+    public function readConfig(string $configName, Section $section): array
     {
         $sectionName = $section->getName();
         $sectionConfig = $this->readFromMultiSectionConfigCached($configName, $sectionName);
@@ -49,27 +51,17 @@ abstract class File implements Adapter
         return $sectionConfig;
     }
 
-    /**
-     * @param string $configName
-     * @param string $sectionName
-     * @return array
-     */
-    private function readFromMultiSectionConfigCached($configName, $sectionName)
+    private function readFromMultiSectionConfigCached(string $configName, string $sectionName): array
     {
         if (!isset($this->multiSectionConfigs[$configName])) {
             $this->multiSectionConfigs[$configName] =
                 $this->readMultiSectionConfig($configName);
         }
 
-        return isset($this->multiSectionConfigs[$configName][$sectionName]) ?
-            (array)$this->multiSectionConfigs[$configName][$sectionName] : [];
+        return (array)($this->multiSectionConfigs[$configName][$sectionName] ?? []);
     }
 
-    /**
-     * @param string $configName
-     * @return array
-     */
-    private function readMultiSectionConfig($configName)
+    private function readMultiSectionConfig(string $configName): array
     {
         $singleFileName = $this->configsRootPath . DIRECTORY_SEPARATOR . $configName . '.' . $this->extension;
 
@@ -79,14 +71,9 @@ abstract class File implements Adapter
         return $this->readFile($singleFileName);
     }
 
-    abstract protected function readFile($filePath);
+    abstract protected function readFile(string $filePath): array;
 
-    /**
-     * @param string $configName
-     * @param string $sectionName
-     * @return array
-     */
-    private function readFromSingleSectionConfig($configName, $sectionName)
+    private function readFromSingleSectionConfig(string $configName, string $sectionName): array
     {
         $configRootPath = $this->configsRootPath . DIRECTORY_SEPARATOR . $configName;
         $sectionFileName = $configRootPath . DIRECTORY_SEPARATOR . $sectionName . '.' . $this->extension;
@@ -101,7 +88,7 @@ abstract class File implements Adapter
     /**
      * {@inheritdoc}
      */
-    public function readConfigBlocks($configName, Section $section)
+    public function readConfigBlocks(string $configName, Section $section): array
     {
         $sectionName = $section->getName();
 
@@ -127,7 +114,7 @@ abstract class File implements Adapter
         return $blocks;
     }
 
-    public function reset()
+    public function reset(): void
     {
         $this->multiSectionConfigs = [];
     }
