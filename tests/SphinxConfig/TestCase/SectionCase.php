@@ -1,13 +1,13 @@
 <?php
 
-namespace Ergnuor\SphinxConfig\Tests;
+namespace Ergnuor\SphinxConfig\Tests\TestCase;
 
 use PHPUnit\Framework\MockObject\MockObject;
-use Ergnuor\SphinxConfig\{
-    Section,
+use Ergnuor\SphinxConfig\{Section,
     Section\Reader\Adapter as ReaderAdapter,
-    Section\Writer\Adapter as WriterAdapter
-};
+    Section\Writer\Adapter as WriterAdapter,
+    Tests\SectionTest,
+    Tests\TestCase\TestCase};
 
 
 class SectionCase extends TestCase

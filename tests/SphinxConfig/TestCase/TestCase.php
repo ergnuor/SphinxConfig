@@ -1,6 +1,6 @@
 <?php
 
-namespace Ergnuor\SphinxConfig\Tests;
+namespace Ergnuor\SphinxConfig\Tests\TestCase;
 
 class TestCase extends \PHPUnit\Framework\TestCase
 {

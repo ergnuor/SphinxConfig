@@ -1,7 +1,8 @@
 <?php
 
-namespace Ergnuor\SphinxConfig\Tests;
+namespace Ergnuor\SphinxConfig\Tests\Section;
 
+use Ergnuor\SphinxConfig\Tests\TestCase\SectionCase;
 use PHPUnit\Framework\MockObject\MockObject;
 use Ergnuor\SphinxConfig\Section\{
     Reader,

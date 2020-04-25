@@ -1,6 +1,6 @@
 <?php
 
-namespace Ergnuor\SphinxConfig\Tests;
+namespace Ergnuor\SphinxConfig\Tests\Section;
 
 use Ergnuor\SphinxConfig\Section\Type;
 

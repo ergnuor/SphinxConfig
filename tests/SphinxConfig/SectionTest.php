@@ -2,11 +2,10 @@
 
 namespace Ergnuor\SphinxConfig\Tests;
 
-use Ergnuor\SphinxConfig\{
-    Section\Type as SectionType,
-    Tests\Fake\InMemoryWriterAdapter,
-    Tests\Stub\ReaderAdapter
-};
+use Ergnuor\SphinxConfig\{Section\Type as SectionType,
+    Tests\TestCase\SectionCase,
+    Tests\TestDouble\Fake\InMemoryWriterAdapter,
+    Tests\TestDouble\Stub\ReaderAdapter};
 
 
 /**

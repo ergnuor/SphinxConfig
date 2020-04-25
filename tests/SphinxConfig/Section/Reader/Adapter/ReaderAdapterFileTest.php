@@ -1,11 +1,11 @@
 <?php
 
-namespace Ergnuor\SphinxConfig\Tests;
+namespace Ergnuor\SphinxConfig\Tests\Section\Reader\Adapter;
 
-use Ergnuor\SphinxConfig\{
-    Exception\ReaderException,
-    Section\Reader\Adapter\File as ReaderAdapterFile
-};
+use Ergnuor\SphinxConfig\{Exception\ReaderException,
+    Section\Reader\Adapter\File as ReaderAdapterFile,
+    Tests\TestEnv\FileSystem,
+    Tests\TestCase\SectionCase};
 use PHPUnit\Framework\MockObject\Builder\InvocationMocker;
 use PHPUnit\Framework\MockObject\MockObject;
 

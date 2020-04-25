@@ -1,8 +1,9 @@
 <?php
 
-namespace Ergnuor\SphinxConfig\Tests;
+namespace Ergnuor\SphinxConfig\Tests\Section;
 
 use Ergnuor\SphinxConfig\Exception\WriterException;
+use Ergnuor\SphinxConfig\Tests\TestCase\WriterCase;
 
 /**
  * @uses \Ergnuor\SphinxConfig\Section

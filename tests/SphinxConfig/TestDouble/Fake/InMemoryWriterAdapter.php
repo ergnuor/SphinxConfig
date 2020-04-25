@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Ergnuor\SphinxConfig\Tests\Fake;
+namespace Ergnuor\SphinxConfig\Tests\TestDouble\Fake;
 
 
 use Ergnuor\SphinxConfig\Section\Writer\Adapter;

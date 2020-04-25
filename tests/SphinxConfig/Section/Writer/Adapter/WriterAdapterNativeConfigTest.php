@@ -1,11 +1,11 @@
 <?php
 
-namespace Ergnuor\SphinxConfig\Tests;
+namespace Ergnuor\SphinxConfig\Tests\Section\Writer\Adapter;
 
-use Ergnuor\SphinxConfig\{
-    Exception\WriterException,
-    Section\Writer\Adapter\NativeConfig
-};
+use Ergnuor\SphinxConfig\{Exception\WriterException,
+    Section\Writer\Adapter\NativeConfig,
+    Tests\TestEnv\FileSystem,
+    Tests\TestCase\SectionCase};
 
 class WriterAdapterNativeConfigTest extends SectionCase
 {

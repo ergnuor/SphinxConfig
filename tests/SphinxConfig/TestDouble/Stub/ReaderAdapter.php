@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Ergnuor\SphinxConfig\Tests\Stub;
+namespace Ergnuor\SphinxConfig\Tests\TestDouble\Stub;
 
 
 use Ergnuor\SphinxConfig\{

@@ -7,7 +7,8 @@ use Ergnuor\SphinxConfig\{
     Section,
     Section\Reader\Adapter as ReaderAdapter,
     Section\Type as SectionType,
-    Section\Writer\Adapter as WriterAdapter
+    Section\Writer\Adapter as WriterAdapter,
+    Tests\TestCase\TestCase
 };
 use PHPUnit\Framework\MockObject\MockObject;
 

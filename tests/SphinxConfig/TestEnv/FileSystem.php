@@ -1,12 +1,12 @@
 <?php
 
-namespace Ergnuor\SphinxConfig\Tests;
+namespace Ergnuor\SphinxConfig\Tests\TestEnv;
 
 class FileSystem
 {
     static public function getRootPath(): string
     {
-        return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'files' . DIRECTORY_SEPARATOR;
+        return TESTS_ROOT . DIRECTORY_SEPARATOR . 'files' . DIRECTORY_SEPARATOR;
     }
 
     static public function getWriterAdapterRootPath(): string

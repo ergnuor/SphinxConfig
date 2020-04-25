@@ -1,8 +1,9 @@
 <?php
 
-namespace Ergnuor\SphinxConfig\Tests;
+namespace Ergnuor\SphinxConfig\Tests\Section;
 
 use Ergnuor\SphinxConfig\Section\Type as SectionType;
+use Ergnuor\SphinxConfig\Tests\TestCase\WriterCase;
 
 /**
  * @uses \Ergnuor\SphinxConfig\Section\Type

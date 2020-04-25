@@ -1,8 +1,10 @@
 <?php
 
-namespace Ergnuor\SphinxConfig\Tests;
+namespace Ergnuor\SphinxConfig\Tests\Section\Reader\Adapter\File;
 
 use Ergnuor\SphinxConfig\Section\Reader\Adapter\File\PhpArray as PhpArrayAdapter;
+use Ergnuor\SphinxConfig\Tests\TestEnv\FileSystem;
+use Ergnuor\SphinxConfig\Tests\TestCase\SectionCase;
 
 /**
  * @uses \Ergnuor\SphinxConfig\Section\Reader\Adapter\File
