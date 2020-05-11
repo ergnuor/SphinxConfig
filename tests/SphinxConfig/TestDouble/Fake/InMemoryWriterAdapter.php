@@ -1,10 +1,10 @@
 <?php
 
+declare(strict_types=1);
 
 namespace Ergnuor\SphinxConfig\Tests\TestDouble\Fake;
 
-
-use Ergnuor\SphinxConfig\Section\Writer\Adapter;
+use Ergnuor\SphinxConfig\Section\{Context, Writer\Adapter};
 
 class InMemoryWriterAdapter implements Adapter
 {
@@ -25,7 +25,7 @@ class InMemoryWriterAdapter implements Adapter
 
     public function reset(): void
     {
-        $this->config = [];
+//        $this->config = [];
         $this->resetCurrentSectionAndBlockName();
     }
 
@@ -35,7 +35,7 @@ class InMemoryWriterAdapter implements Adapter
         $this->currentBlockName = null;
     }
 
-    public function write(string $configName): void
+    public function write(Context $context): void
     {
     }
 
@@ -43,19 +43,19 @@ class InMemoryWriterAdapter implements Adapter
      * @inheritDoc
      */
     public function startMultiBlockSection(
-        string $sectionName,
+        string $sectionType,
         string $blockName,
         string $extends = null
     ): void
     {
-        $this->config[$sectionName] = $this->config[$sectionName] ?? [];
-        $this->config[$sectionName][$blockName] = [];
+        $this->config[$sectionType] = $this->config[$sectionType] ?? [];
+        $this->config[$sectionType][$blockName] = [];
 
         if (!is_null($extends)) {
-            $this->config[$sectionName][$blockName]['extends'] = $extends;
+            $this->config[$sectionType][$blockName]['extends'] = $extends;
         }
 
-        $this->currentSectionName = $sectionName;
+        $this->currentSectionName = $sectionType;
         $this->currentBlockName = $blockName;
     }
 
@@ -67,10 +67,10 @@ class InMemoryWriterAdapter implements Adapter
     /**
      * @inheritDoc
      */
-    public function startSingleBlockSection(string $sectionName): void
+    public function startSingleBlockSection(string $sectionType): void
     {
-        $this->config[$sectionName] = $this->config[$sectionName] ?: [];
-        $this->currentSectionName = $sectionName;
+        $this->config[$sectionType] = $this->config[$sectionType] ?? [];
+        $this->currentSectionName = $sectionType;
         $this->currentBlockName = null;
     }
 

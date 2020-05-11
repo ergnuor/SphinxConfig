@@ -1,36 +1,41 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ergnuor\SphinxConfig\Tests\Section;
 
-use Ergnuor\SphinxConfig\Section\Type as SectionType;
-use Ergnuor\SphinxConfig\Tests\TestCase\WriterCase;
-
 /**
- * @uses \Ergnuor\SphinxConfig\Section\Type
- * @uses \Ergnuor\SphinxConfig\Section
+ * @uses \Ergnuor\SphinxConfig\Section\Utility\Type
+ * @uses \Ergnuor\SphinxConfig\Section\Processor\Inheritance
  */
 class WriterMultiBlockSectionTest extends WriterCase
 {
-    public function setUp(): void
+    public function testReset(): void
     {
-        $this->setSectionName(SectionType::SOURCE);
-        parent::setUp();
+        $this->writerAdapter->expects($this->once())
+            ->method('reset');
+
+        $this->writer->reset();
     }
 
     public function testWriteMultiBlockSection(): void
     {
         $this->adapterExpectations(
-            [2, 'startMultiBlockSection',
+            [
+                2,
+                'startMultiBlockSection',
                 [
-                    [$this->sectionName, 'block1', null,],
-                    [$this->sectionName, 'block2', 'block1',]
-                ]
+                    [$this->context->getSectionType(), 'block1', null,],
+                    [$this->context->getSectionType(), 'block2', 'block1',],
+                ],
             ],
-            [2, 'writeParam',
+            [
+                2,
+                'writeParam',
                 [
                     ['sourceBlock1Param1', 'sourceBlock1Value1',],
-                    ['sourceBlock2Param1', 'sourceBlock2Value1',]
-                ]
+                    ['sourceBlock2Param1', 'sourceBlock2Value1',],
+                ],
             ],
             [2, 'endMultiBlockSection']
         );
@@ -67,10 +72,12 @@ class WriterMultiBlockSectionTest extends WriterCase
     public function testWriteMultiBlockSectionButSectionBlocksConfigIsEmpty(): void
     {
         $this->adapterExpectations(
-            [2, 'startMultiBlockSection',
+            [
+                2,
+                'startMultiBlockSection',
                 [
-                    [$this->sectionName, 'block1', null,],
-                    [$this->sectionName, 'block2', 'block1',]
+                    [$this->context->getSectionType(), 'block1', null,],
+                    [$this->context->getSectionType(), 'block2', 'block1',]
                 ]
             ],
             [0, 'writeParam'],

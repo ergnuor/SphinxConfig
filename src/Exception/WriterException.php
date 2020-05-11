@@ -1,10 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ergnuor\SphinxConfig\Exception;
 
-use Ergnuor\SphinxConfig\Exception;
-
-class WriterException extends Exception
+class WriterException extends SectionException
 {
-
 }

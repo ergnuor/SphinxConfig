@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ergnuor\SphinxConfig\Section\Reader\Adapter\File;
 
 use Ergnuor\SphinxConfig\Section\Reader\Adapter\File;
@@ -12,7 +14,7 @@ class PhpArray extends File
     {
         if (function_exists('opcache_invalidate')) {
             opcache_invalidate($filePath, true);
-        } else if (function_exists('apc_compile_file')) {
+        } elseif (function_exists('apc_compile_file')) {
             apc_compile_file($filePath);
         }
 

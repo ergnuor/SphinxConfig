@@ -1,35 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ergnuor\SphinxConfig\Tests\Section;
 
-use Ergnuor\SphinxConfig\Tests\TestCase\SectionCase;
 use PHPUnit\Framework\MockObject\MockObject;
-use Ergnuor\SphinxConfig\Section\{
-    Reader,
-    Reader\Adapter as ReaderAdapter,
-    Type as SectionType
-};
+use Ergnuor\SphinxConfig\Section\{Reader, Reader\Adapter as ReaderAdapter, Utility\Type as SectionType};
 
 /**
- * @uses \Ergnuor\SphinxConfig\Section\Type
- * @uses \Ergnuor\SphinxConfig\Section
+ * @uses \Ergnuor\SphinxConfig\Section\Utility\Type
+ * @uses \Ergnuor\SphinxConfig\Section\Processor\Inheritance
  */
 class ReaderTest extends SectionCase
 {
-    /**
-     * @var MockObject|ReaderAdapter
-     */
-    private $adapter;
-
     /**
      * @var Reader
      */
     private $reader;
 
+    /**
+     * @var MockObject|ReaderAdapter
+     */
+    private $readerAdapter;
+
     public function setUp(): void
     {
-        $this->adapter = $this->getReaderAdapterMock();
-        $this->reader = new Reader($this->adapter);
+        parent::setUp();
+        $this->readerAdapter = $this->getReaderAdapterMock();
+        $this->reader = new Reader($this->readerAdapter);
     }
 
     private function getReaderAdapterMock(): MockObject
@@ -37,18 +35,28 @@ class ReaderTest extends SectionCase
         return $this->getMockForAbstractClass(ReaderAdapter::class);
     }
 
+    public function testReset(): void
+    {
+        $this->readerAdapter->expects($this->once())
+            ->method('reset');
+
+        $this->reader->reset();
+    }
+
     public function testReadConfigBlocksMergedWithAndOverrideReadConfig(): void
     {
-        $this->setUpConfigEnvironment('whatever', 'configName', SectionType::SOURCE);
-
-        $this->setUpReadConfigAdapterMethod([
-            'block1' => [],
-            'block2' => ['param' => 'willBeOverwritten',],
-        ]);
-        $this->setUpReadConfigBlocksAdapterMethod([
-            'block2' => ['param' => 'overwrites',],
-            'block3' => [],
-        ]);
+        $this->setUpReadAdapterMethod(
+            [
+                'block1' => [],
+                'block2' => ['param' => 'willBeOverwritten',],
+            ]
+        );
+        $this->setUpReadSeparateBlocksAdapterMethod(
+            [
+                'block2' => ['param' => 'overwrites',],
+                'block3' => [],
+            ]
+        );
 
         $config = $this->readConfig();
 
@@ -62,41 +70,38 @@ class ReaderTest extends SectionCase
         );
     }
 
-    private function setUpReadConfigAdapterMethod(array $returnValue): void
+    private function setUpReadAdapterMethod(array $returnValue): void
     {
-        $this->adapter->expects($this->once())
-            ->method('readConfig')
-            ->with($this->configNameToRead, $this->sectionParameterObject)
+        $this->readerAdapter->expects($this->once())
+            ->method('read')
+            ->with($this->context)
             ->willReturn($returnValue);
     }
 
-    private function setUpReadConfigBlocksAdapterMethod(array $returnValue)
+    private function setUpReadSeparateBlocksAdapterMethod(array $returnValue): void
     {
-        $this->adapter->expects($this->once())
-            ->method('readConfigBlocks')
-            ->with($this->configNameToRead, $this->sectionParameterObject)
+        $this->readerAdapter->expects($this->once())
+            ->method('readSeparateBlocks')
+            ->with($this->context)
             ->willReturn($returnValue);
     }
 
     private function readConfig(): array
     {
-        return $this->reader->readConfig(
-            $this->configNameToRead,
-            $this->sectionParameterObject
-        );
+        return $this->reader->read($this->context);
     }
 
-    public function testReadCurrentConfigSingleBlockTransformationsApplied(): void
+    public function testReadCurrentConfigSingleBlockSectionTransformationsApplied(): void
     {
-        $this->readCurrentConfigSingleBlockTransformations(['param' => 'value',]);
+        $this->readCurrentConfigSingleBlockSectionTransformations(['param' => 'value',]);
     }
 
-    public function readCurrentConfigSingleBlockTransformations(array $readConfigData): void
+    public function readCurrentConfigSingleBlockSectionTransformations(array $readConfigData): void
     {
-        $this->setUpConfigEnvironment('currentConfig', 'currentConfig', SectionType::SEARCHD);
+        $this->setSectionType(SectionType::SEARCHD);
 
-        $this->setUpReadConfigAdapterMethod($readConfigData);
-        $this->setUpReadConfigBlocksAdapterMethod(['block1' => [],]);
+        $this->setUpReadAdapterMethod($readConfigData);
+        $this->setUpReadSeparateBlocksAdapterMethod(['block1' => [],]);
 
         $config = $this->readConfig();
 
@@ -113,31 +118,8 @@ class ReaderTest extends SectionCase
         );
     }
 
-    public function testReadCurrentConfigSingleBlockTransformationsNotAppliedBecauseBlockExists(): void
+    public function testReadCurrentConfigSingleBlockSectionTransformationsNotAppliedBecauseBlockExists(): void
     {
-        $this->readCurrentConfigSingleBlockTransformations([SectionType::SEARCHD => ['param' => 'value',]]);
-    }
-
-    public function testReadExternalConfigSingleBlockTransformationsApplied(): void
-    {
-        $this->setUpConfigEnvironment('currentConfig', 'externalConfig', SectionType::SEARCHD);
-
-        $this->setUpReadConfigAdapterMethod(['param' => 'value',]);
-        $this->setUpReadConfigBlocksAdapterMethod(['block1' => [],]);
-
-        $config = $this->readConfig();
-
-        $this->assertSame(
-            [
-                SectionType::SEARCHD => [
-                    'param' => 'value',
-                    'isPseudo' => true,
-                ],
-                'block1' => [
-                    'isPseudo' => true,
-                ],
-            ],
-            $config
-        );
+        $this->readCurrentConfigSingleBlockSectionTransformations([SectionType::SEARCHD => ['param' => 'value',]]);
     }
 }

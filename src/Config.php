@@ -1,15 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ergnuor\SphinxConfig;
 
-use Ergnuor\SphinxConfig\Section\Reader\{
-    Adapter as ReaderAdapter,
-    Adapter\File\PhpArray as PhpArrayReaderAdapter
+use Ergnuor\SphinxConfig\Section\Context;
+use Ergnuor\SphinxConfig\Section\Utility\Type as SectionType;
+use Ergnuor\SphinxConfig\Section\SourceConfig\Assembler;
+use Ergnuor\SphinxConfig\Section\Processor\{
+    Cleaner as CleanerProcessor,
+    Inheritance as InheritanceProcessor,
+    Parameter as ParameterProcessor
 };
-use Ergnuor\SphinxConfig\Section\Writer\{
-    Adapter as WriterAdapter,
-    Adapter\NativeConfig as NativeConfigWriterAdapter
-};
+use Ergnuor\SphinxConfig\Section\Reader;
+use Ergnuor\SphinxConfig\Section\Reader\Adapter as ReaderAdapter;
+use Ergnuor\SphinxConfig\Section\Reader\Adapter\File\PhpArray as PhpArrayReaderAdapter;
+use Ergnuor\SphinxConfig\Section\Writer;
+use Ergnuor\SphinxConfig\Section\Writer\{Adapter as WriterAdapter, Adapter\NativeConfig as NativeConfigWriterAdapter};
 
 class Config
 {
@@ -19,22 +26,24 @@ class Config
     private $placeholderValues = [];
 
     /**
-     * @var ReaderAdapter
+     * @var Reader
      */
-    private $sectionReaderAdapter;
+    private $reader;
 
     /**
-     * @var WriterAdapter
+     * @var Writer
      */
-    private $sectionWriterAdapter;
+    private $writer;
 
-    public function __construct(
-        ReaderAdapter $sectionReaderAdapter,
-        WriterAdapter $sectionWriterAdapter
-    )
+    /**
+     * Config constructor.
+     * @param ReaderAdapter $sectionReaderAdapter
+     * @param WriterAdapter $sectionWriterAdapter
+     */
+    public function __construct(ReaderAdapter $sectionReaderAdapter, WriterAdapter $sectionWriterAdapter)
     {
-        $this->sectionReaderAdapter = $sectionReaderAdapter;
-        $this->sectionWriterAdapter = $sectionWriterAdapter;
+        $this->reader = new Reader($sectionReaderAdapter);
+        $this->writer = new Writer($sectionWriterAdapter);
     }
 
     /**
@@ -67,28 +76,42 @@ class Config
     /**
      * @param string $configName
      * @return Config
-     * @throws Exception\WriterException
      * @throws Exception\SectionException
+     * @throws Exception\WriterException
      */
     public function transform(string $configName): Config
     {
-        $sections = Section\Type::getTypes();
+        $this->reader->reset();
+        $this->writer->reset();
 
-        $this->sectionWriterAdapter->reset();
-        $this->sectionReaderAdapter->reset();
+        $assembler = new Assembler($this->reader);
 
-        foreach ($sections as $sectionName) {
-            $section = new Section(
-                $configName,
-                $sectionName,
-                $this->sectionReaderAdapter,
-                $this->sectionWriterAdapter,
-                $this->getPlaceholderValues()
-            );
-            $section->transform();
+        foreach (SectionType::getTypes() as $sectionType) {
+            $context = new Context($configName, $sectionType);
+
+            $config = $assembler->assemble($context);
+
+            $config = $this->process($context, $config);
+
+            $this->writer->write($config, $context);
         }
 
         return $this;
+    }
+
+    /**
+     * @param Context $context
+     * @param array $config
+     * @return array
+     * @throws Exception\SectionException
+     */
+    private function process(Context $context, array $config): array
+    {
+        $config = InheritanceProcessor::process($context, $config);
+        $config = ParameterProcessor::process($context, $config, $this->getPlaceholderValues());
+        $config = CleanerProcessor::process($config);
+
+        return $config;
     }
 
     public function getPlaceholderValues(): array

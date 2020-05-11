@@ -1,12 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ergnuor\SphinxConfig\Section;
 
-use Ergnuor\SphinxConfig\{
-    Exception\WriterException,
-    Section,
-    Section\Writer\Adapter as WriterAdapter
-};
+use Ergnuor\SphinxConfig\Exception\{Message as ExceptionMessage, WriterException};
+use Ergnuor\SphinxConfig\Section\{Utility\Type, Writer\Adapter as WriterAdapter};
 
 class Writer
 {
@@ -20,36 +19,43 @@ class Writer
         $this->writerAdapter = $writerAdapter;
     }
 
-    /**
-     * @param array $config
-     * @param Section $section
-     * @throws WriterException
-     */
-    final public function write(array $config, Section $section): void
+    public function reset(): void
     {
-        $sectionName = $section->getName();
-
-        if (Type::isSingleBlock($sectionName)) {
-            $this->writeSingleBlockSection($config, $section);
-        } else if (Type::isMultiBlock($sectionName)) {
-            $this->writeMultiBlockSection($config, $section);
-        } else {
-            throw new WriterException("Unknown section type '{$sectionName}'");
-        }
-
-        $this->writerAdapter->write($section->getConfigName());
+        $this->writerAdapter->reset();
     }
 
-    private function writeSingleBlockSection(array $config, Section $section): void
+    /**
+     * @param array $config
+     * @param Context $context
+     * @throws WriterException
+     */
+    final public function write(array $config, Context $context): void
     {
-        $sectionName = $section->getName();
+        $sectionType = $context->getSectionType();
 
-        if (empty($config[$sectionName])) {
+        if (Type::isSingleBlock($sectionType)) {
+            $this->writeSingleBlockSection($config, $context);
+        } elseif (Type::isMultiBlock($sectionType)) {
+            $this->writeMultiBlockSection($config, $context);
+        } else {
+            throw new WriterException(
+                ExceptionMessage::forContext($context, 'unknown section type')
+            );
+        }
+
+        $this->writerAdapter->write($context);
+    }
+
+    private function writeSingleBlockSection(array $config, Context $context): void
+    {
+        $sectionType = $context->getSectionType();
+
+        if (empty($config[$sectionType]['config'])) {
             return;
         }
 
-        $this->writerAdapter->startSingleBlockSection($sectionName);
-        $this->writeParams($config[$sectionName]['config']);
+        $this->writerAdapter->startSingleBlockSection($sectionType);
+        $this->writeParams($config[$sectionType]['config']);
         $this->writerAdapter->endSingleBlockSection();
     }
 
@@ -67,13 +73,13 @@ class Writer
         }
     }
 
-    private function writeMultiBlockSection(array $config, Section $section): void
+    private function writeMultiBlockSection(array $config, Context $context): void
     {
-        foreach ($config as $blockName => $blockConfig) {
-            $extends = $blockConfig['extends'] ?? null;
+        foreach ($config as $blockName => $block) {
+            $extends = $block['extends'] ?? null;
 
-            $this->writerAdapter->startMultiBlockSection($section->getName(), $blockName, $extends);
-            $this->writeParams($blockConfig['config']);
+            $this->writerAdapter->startMultiBlockSection($context->getSectionType(), $blockName, $extends);
+            $this->writeParams($block['config']);
             $this->writerAdapter->endMultiBlockSection();
         }
     }

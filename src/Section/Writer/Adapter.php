@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ergnuor\SphinxConfig\Section\Writer;
 
+use Ergnuor\SphinxConfig\Section\Context;
 
 interface Adapter
 {
@@ -10,17 +13,20 @@ interface Adapter
      */
     public function reset(): void;
 
-    public function write(string $configName): void;
+    /**
+     * @param Context $context
+     */
+    public function write(Context $context): void;
 
     public function startMultiBlockSection(
-        string $sectionName,
+        string $sectionType,
         string $blockName,
         string $extends = null
     ): void;
 
     public function endMultiBlockSection(): void;
 
-    public function startSingleBlockSection(string $sectionName): void;
+    public function startSingleBlockSection(string $sectionType): void;
 
     public function endSingleBlockSection(): void;
 

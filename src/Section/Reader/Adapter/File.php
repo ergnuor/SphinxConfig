@@ -1,12 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ergnuor\SphinxConfig\Section\Reader\Adapter;
 
-use Ergnuor\SphinxConfig\{
-    Section,
-    Exception\ReaderException,
-    Section\Reader\Adapter
-};
+use Ergnuor\SphinxConfig\Exception\ReaderException;
+use Ergnuor\SphinxConfig\Section\{Context, Reader\Adapter};
 
 abstract class File implements Adapter
 {
@@ -39,26 +38,33 @@ abstract class File implements Adapter
         $this->configsRootPath = realpath($this->configsRootPath);
     }
 
-    public function readConfig(string $configName, Section $section): array
+    public function reset(): void
     {
-        $sectionName = $section->getName();
-        $sectionConfig = $this->readFromMultiSectionConfigCached($configName, $sectionName);
-        $sectionConfig = array_replace(
-            $sectionConfig,
-            $this->readFromSingleSectionConfig($configName, $sectionName)
-        );
-
-        return $sectionConfig;
+        $this->multiSectionConfigs = [];
     }
 
-    private function readFromMultiSectionConfigCached(string $configName, string $sectionName): array
+    public function read(Context $context): array
     {
+        $config = $this->readFromMultiSectionConfigCached($context);
+        $config = array_replace(
+            $config,
+            $this->readFromSingleSectionConfig($context)
+        );
+
+        return $config;
+    }
+
+    private function readFromMultiSectionConfigCached(Context $context): array
+    {
+        $configName = $context->getConfigName();
+        $sectionType = $context->getSectionType();
+
         if (!isset($this->multiSectionConfigs[$configName])) {
             $this->multiSectionConfigs[$configName] =
                 $this->readMultiSectionConfig($configName);
         }
 
-        return (array)($this->multiSectionConfigs[$configName][$sectionName] ?? []);
+        return $this->multiSectionConfigs[$configName][$sectionType] ?? [];
     }
 
     private function readMultiSectionConfig(string $configName): array
@@ -73,10 +79,13 @@ abstract class File implements Adapter
 
     abstract protected function readFile(string $filePath): array;
 
-    private function readFromSingleSectionConfig(string $configName, string $sectionName): array
+    private function readFromSingleSectionConfig(Context $sectionNContext): array
     {
+        $configName = $sectionNContext->getConfigName();
+        $sectionType = $sectionNContext->getSectionType();
+
         $configRootPath = $this->configsRootPath . DIRECTORY_SEPARATOR . $configName;
-        $sectionFileName = $configRootPath . DIRECTORY_SEPARATOR . $sectionName . '.' . $this->extension;
+        $sectionFileName = $configRootPath . DIRECTORY_SEPARATOR . $sectionType . '.' . $this->extension;
 
         if (!file_exists($sectionFileName)) {
             return [];
@@ -88,11 +97,13 @@ abstract class File implements Adapter
     /**
      * {@inheritdoc}
      */
-    public function readConfigBlocks(string $configName, Section $section): array
+    public function readSeparateBlocks(Context $context): array
     {
-        $sectionName = $section->getName();
+        $configName = $context->getConfigName();
+        $sectionType = $context->getSectionType();
 
-        $blockFilesPath = $this->configsRootPath . DIRECTORY_SEPARATOR . $configName . DIRECTORY_SEPARATOR . $sectionName . DIRECTORY_SEPARATOR;
+        $blockFilesPath = $this->configsRootPath . DIRECTORY_SEPARATOR . $configName
+            . DIRECTORY_SEPARATOR . $sectionType . DIRECTORY_SEPARATOR;
 
         if (!is_dir($blockFilesPath)) {
             return [];
@@ -106,16 +117,11 @@ abstract class File implements Adapter
                 continue;
             }
 
-            $blockConfig = $this->readFile($blockFilesPath . $blockFileName);
+            $block = $this->readFile($blockFilesPath . $blockFileName);
             $blockName = preg_replace('/\.' . preg_quote($this->extension) . '$/', '', $blockFileName);
-            $blocks[$blockName] = $blockConfig;
+            $blocks[$blockName] = $block;
         }
 
         return $blocks;
-    }
-
-    public function reset(): void
-    {
-        $this->multiSectionConfigs = [];
     }
 }

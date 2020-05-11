@@ -1,13 +1,10 @@
 <?php
 
+declare(strict_types=1);
 
 namespace Ergnuor\SphinxConfig\Tests\TestDouble\Stub;
 
-
-use Ergnuor\SphinxConfig\{
-    Section,
-    Section\Reader\Adapter
-};
+use Ergnuor\SphinxConfig\{Section\Context, Section\Reader\Adapter};
 
 class ReaderAdapter implements Adapter
 {
@@ -16,23 +13,25 @@ class ReaderAdapter implements Adapter
      */
     private $sourceData = [];
 
-    public function readConfig(string $configName, Section $section): array
+    public function read(Context $context): array
     {
+        $configName = $context->getConfigName();
+        $sectionType = $context->getSectionType();
         if (!isset($this->sourceData[$configName])) {
             return [];
         }
 
-        if (!isset($this->sourceData[$configName][$section->getName()])) {
+        if (!isset($this->sourceData[$configName][$sectionType])) {
             return [];
         }
 
-        return $this->sourceData[$configName][$section->getName()];
+        return $this->sourceData[$configName][$sectionType];
     }
 
     /**
      * @inheritDoc
      */
-    public function readConfigBlocks(string $configName, Section $section): array
+    public function readSeparateBlocks(Context $context): array
     {
         return [];
     }
@@ -40,7 +39,7 @@ class ReaderAdapter implements Adapter
 
     public function reset(): void
     {
-        $this->sourceData = [];
+//        $this->sourceData = [];
     }
 
     public function setSourceData(array $sourceData): void

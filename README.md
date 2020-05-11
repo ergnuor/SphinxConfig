@@ -91,18 +91,18 @@ return [
 Here is a typical full file structure of configuration:
 
     ├── preciousConfig
-    │   ├── sectionName
+    │   ├── sectionType
     │   │   └── blockName.php      # Block is located in a separate file
-    │   └── sectionName.php        # Section is located in a separate file
+    │   └── sectionType.php        # Section is located in a separate file
     └── preciousConfig.php         # Whole configuration is located in one file
 
 You don't have to describe a structure of configuration as comprehensively as shown above. You can choose one of the following options or combine them at your own discretion:
 - An entire configuration is located in one file.  
 For example: `/path/to/configs/preciousConfig.php`,
 - Section is located in a separate file.  
-For example: `/path/to/configs/preciousConfig/sectionName.php`,
+For example: `/path/to/configs/preciousConfig/sectionType.php`,
 - Block is located in a separate file.  
-For example: `/path/to/configs/preciousConfig/sectionName/blockName.php`.
+For example: `/path/to/configs/preciousConfig/sectionType/blockName.php`.
 This option may be useful for storing common parameters used by different configurations. For more information see [inheritance between configurations](#inheritance-between-configurations) section.
 
 

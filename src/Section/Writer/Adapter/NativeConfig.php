@@ -1,11 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ergnuor\SphinxConfig\Section\Writer\Adapter;
 
-use Ergnuor\SphinxConfig\{
-    Section\Writer\Adapter,
-    Exception\WriterException
-};
+use Ergnuor\SphinxConfig\Exception\{Message as ExceptionMessage, WriterException};
+use Ergnuor\SphinxConfig\Section\{Context, Writer\Adapter};
 
 class NativeConfig implements Adapter
 {
@@ -33,50 +33,55 @@ class NativeConfig implements Adapter
     }
 
     /**
-     * @param string $configName
+     * @param Context $context
      * @throws WriterException
      */
-    public function write(string $configName): void
+    public function write(Context $context): void
     {
-        $handle = fopen($this->getFilePath($configName), 'w');
+        $handle = fopen($this->getFilePath($context), 'w');
         fwrite($handle, $this->buffer);
         fclose($handle);
     }
 
     /**
-     * @param string $configName
+     * @param Context $context
      * @return string
      * @throws WriterException
      */
-    private function getFilePath(string $configName): string
+    private function getFilePath(Context $context): string
     {
         if (is_null($this->dstPath)) {
             return 'php://stdout';
         }
 
         if (!is_dir($this->dstPath)) {
-            throw new WriterException("'{$this->dstPath}' is not a directory");
+            throw new WriterException(
+                ExceptionMessage::forContext($context, "'{$this->dstPath}' is not a directory")
+            );
         }
 
         if (!is_writable($this->dstPath)) {
-            throw new WriterException("Destination directory '{$this->dstPath}' is not writable");
+            throw new WriterException(
+                ExceptionMessage::forContext($context, "destination directory '{$this->dstPath}' is not writable")
+            );
         }
 
         $path = realpath($this->dstPath);
         if ($path === false) {
-            throw new WriterException("Getting real path for '{$this->dstPath}' directory is failed");
+            throw new WriterException(
+                ExceptionMessage::forContext($context, "getting real path for '{$this->dstPath}' directory is failed")
+            );
         }
 
-        return $path . DIRECTORY_SEPARATOR . $configName . '.conf';
+        return $path . DIRECTORY_SEPARATOR . $context->getConfigName() . '.conf';
     }
 
     public function startMultiBlockSection(
-        string $sectionName,
+        string $sectionType,
         string $blockName,
         string $extends = null
-    ): void
-    {
-        $blockStartText = "{$sectionName} {$blockName}";
+    ): void {
+        $blockStartText = "{$sectionType} {$blockName}";
         if (isset($extends)) {
             $blockStartText .= ' : ' . $extends;
         }
@@ -99,9 +104,9 @@ class NativeConfig implements Adapter
         $this->buffer .= "}" . PHP_EOL . PHP_EOL;
     }
 
-    public function startSingleBlockSection(string $sectionName): void
+    public function startSingleBlockSection(string $sectionType): void
     {
-        $this->writeBlock($sectionName);
+        $this->writeBlock($sectionType);
     }
 
     public function endSingleBlockSection(): void
