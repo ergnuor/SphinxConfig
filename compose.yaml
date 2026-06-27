@@ -1,0 +1,15 @@
+name: ergnuor-sphinx-config
+
+services:
+  php:
+    build:
+      context: ./docker
+      args:
+        HOST_UID: "${HOST_UID:-1000}"
+        HOST_GID: "${HOST_GID:-1000}"
+    volumes:
+      - ./:/app
+      - composer-cache:/home/app/.cache/composer
+
+volumes:
+  composer-cache:
