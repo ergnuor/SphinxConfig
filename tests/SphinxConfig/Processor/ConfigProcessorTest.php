@@ -9,6 +9,7 @@ use Ergnuor\SphinxConfig\Domain\ConfigName;
 use Ergnuor\SphinxConfig\Exception\InvalidArgumentException;
 use Ergnuor\SphinxConfig\Processor\ConfigProcessor;
 use Ergnuor\SphinxConfig\Processor\ProcessorInterface;
+use Override;
 use PHPUnit\Framework\TestCase;
 
 final class ConfigProcessorTest extends TestCase
@@ -16,7 +17,7 @@ final class ConfigProcessorTest extends TestCase
     public function testProcessorsMustNotBeEmpty(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessageIsOrContains('Processors must not be empty.');
+        $this->expectExceptionMessageIsOrContains('Processors list cannot be empty.');
 
         new ConfigProcessor([]);
     }
@@ -24,7 +25,7 @@ final class ConfigProcessorTest extends TestCase
     public function testRejectsInvalidProcessor(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessageIsOrContains('Processor must implement ' . ProcessorInterface::class);
+        $this->expectExceptionMessageIsOrContains("Processor must implement '" . ProcessorInterface::class . "'.");
 
         // @phpstan-ignore argument.type (Intentionally passing invalid element type to verify defensive runtime guard)
         new ConfigProcessor([
@@ -78,12 +79,14 @@ final class ConfigProcessorTest extends TestCase
     {
         return new Config(
             new ConfigName($configName),
+            [],
         );
     }
 }
 
 final readonly class PassThroughProcessor implements ProcessorInterface
 {
+    #[Override]
     public function process(Config $config): Config
     {
         return $config;
@@ -98,6 +101,7 @@ final readonly class EventLogProcessor implements ProcessorInterface
         private EventRecorder $eventRecorder,
     ) {}
 
+    #[Override]
     public function process(Config $config): Config
     {
         $this->eventRecorder->record($this->name, $config);

@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Ergnuor\SphinxConfig\Tests\Input;
 
 use Ergnuor\SphinxConfig\Domain\ConfigName;
-use Ergnuor\SphinxConfig\Exception\LogicException;
 use Ergnuor\SphinxConfig\Input\ConfigImporter;
+use Ergnuor\SphinxConfig\Input\Declaration\Config as ConfigDeclaration;
 use Ergnuor\SphinxConfig\Input\Decoder\DecoderInterface;
-use Ergnuor\SphinxConfig\Input\Normalizer;
+use Ergnuor\SphinxConfig\Input\DomainConfigFactory;
 use Ergnuor\SphinxConfig\Input\Payload\PayloadInterface;
-use Ergnuor\SphinxConfig\Input\Raw\Config as RawConfig;
 use Ergnuor\SphinxConfig\Input\Reader\ReaderInterface;
+use Ergnuor\SphinxConfig\Schema\ConfigSchemaInterface;
+use Ergnuor\SphinxConfig\Schema\KnownSchemas;
+use LogicException;
+use Override;
 use PHPUnit\Framework\TestCase;
 
 final class ConfigImporterTest extends TestCase
@@ -24,7 +27,7 @@ final class ConfigImporterTest extends TestCase
 
         $importerFixture = $this->newConfigImporterFixture(
             [$payload],
-            [$requestedConfigName],
+            [new ConfigDeclaration([])],
         );
 
         $config = $importerFixture->importer->import($requestedConfigName);
@@ -49,7 +52,7 @@ final class ConfigImporterTest extends TestCase
 
         $importerFixture = $this->newConfigImporterFixture(
             [$payload],
-            [$firstConfigName],
+            [new ConfigDeclaration([])],
         );
 
         $firstConfig = $importerFixture->importer->import($firstConfigName);
@@ -76,8 +79,8 @@ final class ConfigImporterTest extends TestCase
         $importerFixture = $this->newConfigImporterFixture(
             [$firstPayload, $secondPayload],
             [
-                $firstConfigName,
-                $secondConfigName,
+                new ConfigDeclaration([]),
+                new ConfigDeclaration([]),
             ],
         );
 
@@ -98,87 +101,30 @@ final class ConfigImporterTest extends TestCase
         );
     }
 
-    public function testRejectsDecoderResultWithDifferentConfigName(): void
-    {
-        $requestedConfigName = new ConfigName('requestedConfig');
-        $decodedConfigName = new ConfigName('decodedConfig');
-
-        $importerFixture = $this->newConfigImporterFixture(
-            [new ConfigImporterPayload()],
-            [$decodedConfigName],
-        );
-
-        $this->expectException(LogicException::class);
-        $this->expectExceptionMessageIsOrContains(
-            "Decoder returned config 'decodedConfig' while 'requestedConfig' was requested",
-        );
-
-        $importerFixture->importer->import($requestedConfigName);
-    }
-
-    public function testDoesNotCacheRejectedDecoderResult(): void
-    {
-        $requestedConfigName = new ConfigName('requestedConfig');
-        $decodedConfigName = new ConfigName('decodedConfig');
-
-        $firstPayload = new ConfigImporterPayload();
-        $secondPayload = new ConfigImporterPayload();
-
-        $importerFixture = $this->newConfigImporterFixture(
-            [$firstPayload, $secondPayload],
-            [$decodedConfigName, $requestedConfigName],
-        );
-
-        try {
-            $importerFixture->importer->import($requestedConfigName);
-            $this->fail('Decoder contract violation was not rejected.');
-        } catch (LogicException) {
-        }
-
-        $config = $importerFixture->importer->import($requestedConfigName);
-
-        $this->assertTrue($requestedConfigName->equals($config->name));
-
-        $this->assertImportStagesWereCalled(
-            $importerFixture,
-            [
-                [$requestedConfigName, $firstPayload],
-                [$requestedConfigName, $secondPayload],
-            ],
-        );
-    }
-
     /**
      * @param list<PayloadInterface> $payloads
-     * @param list<ConfigName> $configNames
+     * @param list<ConfigDeclaration> $configDeclarations
      */
-    private function newConfigImporterFixture(array $payloads, array $configNames): ConfigImporterFixture
+    private function newConfigImporterFixture(array $payloads, array $configDeclarations): ConfigImporterFixture
     {
         $reader = new ConfigImporterReaderSpy($payloads);
+        $schema = KnownSchemas::sphinx();
 
-        $decoder = new ConfigImporterDecoderSpy(
-            array_map(
-                fn(ConfigName $configName): RawConfig => $this->newRawConfig($configName),
-                $configNames,
-            ),
-        );
+        $decoder = new ConfigImporterDecoderSpy($configDeclarations);
 
         $configImporter = new ConfigImporter(
             $reader,
             $decoder,
-            new Normalizer(),
+            new DomainConfigFactory(),
+            $schema,
         );
 
         return new ConfigImporterFixture(
             $reader,
             $decoder,
             $configImporter,
+            $schema,
         );
-    }
-
-    private function newRawConfig(ConfigName $configName): RawConfig
-    {
-        return new RawConfig($configName, []);
     }
 
     /**
@@ -196,7 +142,10 @@ final class ConfigImporterTest extends TestCase
             $importerFixture->reader->requestedConfigNames,
         );
         $this->assertSame(
-            $expectedCalls,
+            array_map(
+                fn(array $element): array => [$element[0], $element[1], $importerFixture->schema],
+                $expectedCalls,
+            ),
             $importerFixture->decoder->decodeCalls,
         );
     }
@@ -208,6 +157,7 @@ final readonly class ConfigImporterFixture
         public ConfigImporterReaderSpy $reader,
         public ConfigImporterDecoderSpy $decoder,
         public ConfigImporter $importer,
+        public ConfigSchemaInterface $schema,
     ) {}
 }
 
@@ -223,12 +173,13 @@ final class ConfigImporterReaderSpy implements ReaderInterface
         private array $payloads,
     ) {}
 
+    #[Override]
     public function read(ConfigName $configName): PayloadInterface
     {
         $this->requestedConfigNames[] = $configName;
 
         if ($this->payloads === []) {
-            throw new \LogicException('No payload queued for reader spy.');
+            throw new LogicException('No payload queued for reader spy.');
         }
 
         return array_shift($this->payloads);
@@ -237,25 +188,29 @@ final class ConfigImporterReaderSpy implements ReaderInterface
 
 final class ConfigImporterDecoderSpy implements DecoderInterface
 {
-    /** @var list<array{ConfigName, PayloadInterface}> */
+    /** @var list<array{ConfigName, PayloadInterface, ConfigSchemaInterface}> */
     public array $decodeCalls = [];
 
     /**
-     * @param list<RawConfig> $rawConfigs
+     * @param list<ConfigDeclaration> $configDeclarations
      */
     public function __construct(
-        private array $rawConfigs,
+        private array $configDeclarations,
     ) {}
 
-    public function decode(ConfigName $configName, PayloadInterface $payload): RawConfig
-    {
-        $this->decodeCalls[] = [$configName, $payload];
+    #[Override]
+    public function decode(
+        ConfigName $configName,
+        PayloadInterface $payload,
+        ConfigSchemaInterface $schema,
+    ): ConfigDeclaration {
+        $this->decodeCalls[] = [$configName, $payload, $schema];
 
-        if ($this->rawConfigs === []) {
-            throw new \LogicException('No raw config queued for decoder spy.');
+        if ($this->configDeclarations === []) {
+            throw new LogicException('No config declaration queued for decoder spy.');
         }
 
-        return array_shift($this->rawConfigs);
+        return array_shift($this->configDeclarations);
     }
 }
 

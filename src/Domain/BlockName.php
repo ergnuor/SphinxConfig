@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Ergnuor\SphinxConfig\Domain;
 
-final readonly class ConfigName extends AbstractNotEmptyString
+final readonly class BlockName extends AbstractNotEmptyString
 {
     public function __construct(
         string $value
     ) {
         parent::__construct(
             $value,
-            'Config name cannot be empty.'
+            'Block name cannot be empty.'
         );
     }
 

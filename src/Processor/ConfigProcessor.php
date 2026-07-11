@@ -21,13 +21,13 @@ final class ConfigProcessor
         array $processors
     ) {
         if ($processors === []) {
-            throw new InvalidArgumentException('Processors must not be empty.');
+            throw new InvalidArgumentException('Processors list cannot be empty.');
         }
 
         foreach ($processors as $processor) {
             // @phpstan-ignore instanceof.alwaysTrue (Defensive runtime guard because PHP cannot enforce array value types)
             if (!($processor instanceof ProcessorInterface)) {
-                throw new InvalidArgumentException('Processor must implement ' . ProcessorInterface::class);
+                throw new InvalidArgumentException("Processor must implement '" . ProcessorInterface::class . "'.");
             }
         }
 

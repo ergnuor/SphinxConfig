@@ -6,7 +6,7 @@ namespace Ergnuor\SphinxConfig\Tests\Exception;
 
 use Ergnuor\SphinxConfig\Exception\InvalidArgumentException as SphinxInvalidArgumentException;
 use Ergnuor\SphinxConfig\Exception\LogicException as SphinxLogicException;
-use Ergnuor\SphinxConfig\Exception\SphinxConfigException;
+use Ergnuor\SphinxConfig\Exception\SphinxConfigExceptionInterface;
 use InvalidArgumentException;
 use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -24,7 +24,7 @@ final class ExceptionTest extends TestCase
         string $expectedSplExceptionClass,
     ): void {
         $this->assertInstanceOf($expectedSplExceptionClass, $exception);
-        $this->assertInstanceOf(SphinxConfigException::class, $exception);
+        $this->assertInstanceOf(SphinxConfigExceptionInterface::class, $exception);
     }
 
     /**

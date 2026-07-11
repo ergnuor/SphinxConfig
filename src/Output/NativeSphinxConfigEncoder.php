@@ -11,6 +11,6 @@ final class NativeSphinxConfigEncoder
 {
     public function encode(Config $config): string
     {
-        throw new LogicException('Not implemented');
+        throw new LogicException('Not implemented.');
     }
 }
