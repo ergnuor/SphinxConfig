@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Ergnuor\SphinxConfig\Input\Decoder;
 
-use Ergnuor\SphinxConfig\Domain\ConfigName;
 use Ergnuor\SphinxConfig\Exception\ConfigContext;
 use Ergnuor\SphinxConfig\Exception\ConfigProcessingExceptionHandler;
 use Ergnuor\SphinxConfig\Exception\InvalidArgumentException;
@@ -19,6 +18,7 @@ use Ergnuor\SphinxConfig\Input\Payload\PhpArray\ConfigFragment;
 use Ergnuor\SphinxConfig\Input\Payload\PhpArray\SectionBlockFragment;
 use Ergnuor\SphinxConfig\Input\Payload\PhpArray\SectionFragment;
 use Ergnuor\SphinxConfig\Input\Payload\PhpArrayPayload;
+use Ergnuor\SphinxConfig\Naming\ConfigName;
 use Ergnuor\SphinxConfig\Schema\ConfigSchemaInterface;
 use Ergnuor\SphinxConfig\Schema\SectionSchemaInterface;
 use Ergnuor\SphinxConfig\Support\StringGuard;

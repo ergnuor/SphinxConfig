@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Ergnuor\SphinxConfig\Input;
 
 use Ergnuor\SphinxConfig\Domain\Config;
-use Ergnuor\SphinxConfig\Domain\ConfigName;
 use Ergnuor\SphinxConfig\Exception\ConfigContext;
 use Ergnuor\SphinxConfig\Exception\ConfigProcessingExceptionHandler;
 use Ergnuor\SphinxConfig\Input\Decoder\DecoderInterface;
 use Ergnuor\SphinxConfig\Input\Reader\ReaderInterface;
+use Ergnuor\SphinxConfig\Naming\ConfigName;
 use Ergnuor\SphinxConfig\Schema\ConfigSchemaInterface;
 
 final class ConfigImporter

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Ergnuor\SphinxConfig\Domain;
 
 use Ergnuor\SphinxConfig\Exception\InvalidArgumentException;
+use Ergnuor\SphinxConfig\Naming\BlockName;
 
 final readonly class Block
 {

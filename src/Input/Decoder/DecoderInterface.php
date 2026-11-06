@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Ergnuor\SphinxConfig\Input\Decoder;
 
-use Ergnuor\SphinxConfig\Domain\ConfigName;
 use Ergnuor\SphinxConfig\Input\Declaration\Config;
 use Ergnuor\SphinxConfig\Input\Payload\PayloadInterface;
+use Ergnuor\SphinxConfig\Naming\ConfigName;
 use Ergnuor\SphinxConfig\Schema\ConfigSchemaInterface;
 
 interface DecoderInterface

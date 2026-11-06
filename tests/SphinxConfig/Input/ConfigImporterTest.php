@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Ergnuor\SphinxConfig\Tests\Input;
 
-use Ergnuor\SphinxConfig\Domain\ConfigName;
 use Ergnuor\SphinxConfig\Input\ConfigImporter;
 use Ergnuor\SphinxConfig\Input\Declaration\Config as ConfigDeclaration;
 use Ergnuor\SphinxConfig\Input\Decoder\DecoderInterface;
 use Ergnuor\SphinxConfig\Input\DomainConfigFactory;
 use Ergnuor\SphinxConfig\Input\Payload\PayloadInterface;
 use Ergnuor\SphinxConfig\Input\Reader\ReaderInterface;
+use Ergnuor\SphinxConfig\Naming\ConfigName;
 use Ergnuor\SphinxConfig\Schema\ConfigSchemaInterface;
 use Ergnuor\SphinxConfig\Schema\KnownSchemas;
 use LogicException;

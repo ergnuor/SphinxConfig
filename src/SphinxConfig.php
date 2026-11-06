@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Ergnuor\SphinxConfig;
 
 use Ergnuor\SphinxConfig\Domain\Config;
-use Ergnuor\SphinxConfig\Domain\ConfigName;
 use Ergnuor\SphinxConfig\Exception\ConfigContext;
 use Ergnuor\SphinxConfig\Exception\ConfigProcessingExceptionHandler;
 use Ergnuor\SphinxConfig\Input\ConfigImporter;
 use Ergnuor\SphinxConfig\Input\Decoder\DecoderInterface;
 use Ergnuor\SphinxConfig\Input\DomainConfigFactory;
 use Ergnuor\SphinxConfig\Input\Reader\ReaderInterface;
+use Ergnuor\SphinxConfig\Naming\ConfigName;
 use Ergnuor\SphinxConfig\Output\ConfigExporter;
 use Ergnuor\SphinxConfig\Output\NativeSphinxConfigEncoder;
 use Ergnuor\SphinxConfig\Output\Writer\WriterInterface;

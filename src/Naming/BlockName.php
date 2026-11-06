@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Ergnuor\SphinxConfig\Domain;
+namespace Ergnuor\SphinxConfig\Naming;
 
 final readonly class BlockName extends AbstractNotEmptyString
 {

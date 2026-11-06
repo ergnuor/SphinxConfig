@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Ergnuor\SphinxConfig\Tests\Processor;
 
 use Ergnuor\SphinxConfig\Domain\Config;
-use Ergnuor\SphinxConfig\Domain\ConfigName;
 use Ergnuor\SphinxConfig\Exception\InvalidArgumentException;
+use Ergnuor\SphinxConfig\Naming\ConfigName;
 use Ergnuor\SphinxConfig\Processor\ConfigProcessor;
 use Ergnuor\SphinxConfig\Processor\ProcessorInterface;
 use Override;

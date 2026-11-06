@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Ergnuor\SphinxConfig\Domain;
+namespace Ergnuor\SphinxConfig\Naming;
 
-final readonly class ParameterName extends AbstractNotEmptyString
+final readonly class Alias extends AbstractNotEmptyString
 {
     public function __construct(
         string $value
     ) {
         parent::__construct(
             $value,
-            'Parameter name cannot be empty.'
+            'Alias cannot be empty.'
         );
     }
 
