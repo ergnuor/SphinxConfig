@@ -1,13 +1,15 @@
 HOST_UID ?= $(shell id -u)
 HOST_GID ?= $(shell id -g)
 
+export HOST_UID HOST_GID
+
 COMPOSE ?= docker compose
 SERVICE ?= php
 
-.PHONY: build install test analyse phpstan
+.PHONY: build install test stan cs cs-fix
 
 build:
-	HOST_UID=$(HOST_UID) HOST_GID=$(HOST_GID) $(COMPOSE) build $(SERVICE)
+	$(COMPOSE) build $(SERVICE)
 
 install:
 	$(COMPOSE) run --rm $(SERVICE) composer install
@@ -20,3 +22,6 @@ stan:
 
 cs:
 	$(COMPOSE) run --rm $(SERVICE) composer cs:check
+
+cs-fix:
+	$(COMPOSE) run --rm $(SERVICE) composer cs:fix
